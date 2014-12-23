@@ -2,39 +2,30 @@ public with sharing class LineItemTriggerHandler {
 		
 	public static void handle(List<Line_Item__c> items) {
 		
-		// prepare related orders
+		// collect related orders
 		Set<Id> orderIds = new Set<Id>();
 		for (Line_Item__c i : items) {
 			orderIds.add(i.Order__c);
 		}
 		
-		// load required data: 1) related orders 2) also force reload all line items for orders above
+		// load required data: 1) related orders 2) force reload all line items for those orders
 		List<Order__c> orders = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id in :orderIds];
 		List<Line_Item__c> lineItems = [SELECT Order__c, Amount__c, Lot__r.Product_Category__c, Units__c FROM Line_Item__c WHERE Order__c in :orderIds];
 		
-		// execute business logic
+		// execute business logic & persist
 		updatePurchasedAmount(orders, lineItems);
 		updateCategories(orders, lineItems);
-		
-		// persist
 		update orders;
 	}
 	
 	private static void updatePurchasedAmount(List<Order__c> orders, List<Line_Item__c> lineItems) {
-		
-		// Calculate all amounts
 		Map<Id, Decimal> orderToAmountMap = new Map<Id, Decimal>();
 		for (Line_Item__c i : lineItems) {
-			
-			// calculate amount
 			Decimal thisOrderAmount = orderToAmountMap.get(i.Order__c);
 			thisOrderAmount = (thisOrderAmount!=null) ? thisOrderAmount : 0; 
 			thisOrderAmount = thisOrderAmount + i.Amount__c; 
 			orderToAmountMap.put(i.Order__c, thisOrderAmount);
-
 		}
-		
-		// Update all orders
 		for (Order__c o : orders) {
 			Decimal orderAmount = orderToAmountMap.get(o.Id); 
 			o.Purchased__c = (orderAmount!=null) ? orderAmount : 0;
@@ -54,7 +45,29 @@ public with sharing class LineItemTriggerHandler {
 	}
 	
 
-	/* INNER CLASSES BELOW */	
+	/* INNER CLASSES BELOW */
+	
+	// Sortable wrapper for product categories
+	private class CategoryWrapper implements Comparable {
+		public String name {get;set;}
+		public Decimal units {get;set;}
+		
+		public CategoryWrapper(String productCategory) {
+			this.name = productCategory;
+			this.units = 0;
+		}
+		
+		public void addUnits(Decimal units) {
+			this.units += units;
+		}
+		
+		public Integer compareTo(Object compareTo) {
+			CategoryWrapper wrapped = (CategoryWrapper) compareTo;
+			if (units>wrapped.units) return -1;
+			if (units<wrapped.units) return 1;
+			return 0;
+		}
+	} 	
 
 	private class CategoryCounter {
 		
@@ -92,26 +105,4 @@ public with sharing class LineItemTriggerHandler {
 		}
 	}
 	
-	// Sortable wrapper for product categories
-	private class CategoryWrapper implements Comparable {
-		public String name {get;set;}
-		public Decimal units {get;set;}
-		
-		public CategoryWrapper(String productCategory) {
-			this.name = productCategory;
-			this.units = 0;
-		}
-		
-		public void addUnits(Decimal units) {
-			this.units += units;
-		}
-		
-		public Integer compareTo(Object compareTo) {
-			CategoryWrapper wrapped = (CategoryWrapper) compareTo;
-			if (units>wrapped.units) return -1;
-			if (units<wrapped.units) return 1;
-			return 0;
-		}
-	} 
-
 }
