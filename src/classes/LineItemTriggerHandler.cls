@@ -1,5 +1,5 @@
 public with sharing class LineItemTriggerHandler {
-	
+		
 	public static void handle(List<Line_Item__c> items) {
 		
 		// prepare related orders
@@ -38,7 +38,8 @@ public with sharing class LineItemTriggerHandler {
 		
 		// Update all orders
 		for (Order__c o : orders) {
-			o.Purchased__c = orderToAmountMap.get(o.Id);
+			Decimal orderAmount = orderToAmountMap.get(o.Id); 
+			o.Purchased__c = (orderAmount!=null) ? orderAmount : 0;
 		}
 	}
 	
@@ -47,16 +48,10 @@ public with sharing class LineItemTriggerHandler {
 		Map<Id, List<CategoryWrapper>> resultMap = cc.getResultMap();
 		for (Order__c o : orders) {
 			List<CategoryWrapper> ranking = resultMap.get(o.Id);
-			if (ranking!=null) {
-				if (ranking.size()>0) {
-					o.Product_Category_1__c = ranking.get(0).name;
-					o.Product_Category_Units_1__c = ranking.get(0).units;
-				}
-				if (ranking.size()>1) {
-					o.Product_Category_2__c = ranking.get(1).name;
-					o.Product_Category_Units_2__c = ranking.get(1).units;
-				}
-			}
+			o.Product_Category_1__c = (ranking!=null && ranking.size()>0) ? ranking.get(0).name : null;
+			o.Product_Category_Units_1__c = (ranking!=null && ranking.size()>0) ? ranking.get(0).units : null;
+			o.Product_Category_2__c = (ranking!=null && ranking.size()>1) ? ranking.get(1).name : null;
+			o.Product_Category_Units_2__c = (ranking!=null && ranking.size()>1) ? ranking.get(1).units : null;
 		}
 	}
 	
@@ -115,8 +110,8 @@ public with sharing class LineItemTriggerHandler {
 		
 		public Integer compareTo(Object compareTo) {
 			CategoryWrapper wrapped = (CategoryWrapper) compareTo;
-			if (units>wrapped.units) return 1;
-			if (units<wrapped.units) return -1;
+			if (units>wrapped.units) return -1;
+			if (units<wrapped.units) return 1;
 			return 0;
 		}
 	} 
