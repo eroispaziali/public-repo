@@ -1,4 +1,4 @@
-public with sharing class OliTriggerHandler {
+public with sharing class LineItemTriggerHandler {
 	
 	public static void updateRelatedOrders(List<Line_Item__c> items) {
 		
