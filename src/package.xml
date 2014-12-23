@@ -7,5 +7,9 @@
         <members>TestDataFactory</members>
         <name>ApexClass</name>
     </types>
+    <types>
+        <members>LineItemTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
     <version>28.0</version>
 </Package>

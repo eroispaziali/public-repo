@@ -1,6 +1,6 @@
 public with sharing class LineItemTriggerHandler {
 	
-	public static void updateRelatedOrders(List<Line_Item__c> items) {
+	public static void handle(List<Line_Item__c> items) {
 		
 		// prepare related orders
 		Set<Id> orderIds = new Set<Id>();
