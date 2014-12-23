@@ -8,13 +8,11 @@ public with sharing class LineItemTriggerHandler {
 			orderIds.add(i.Order__c);
 		}
 		
-		// load required data for related orders
+		// load required data: 1) related orders 2) also force reload all line items for orders above
 		List<Order__c> orders = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id in :orderIds];
-		
-		// force reload all line items for orders above
 		List<Line_Item__c> lineItems = [SELECT Order__c, Amount__c, Lot__r.Product_Category__c, Units__c FROM Line_Item__c WHERE Order__c in :orderIds];
 		
-		// business logic
+		// execute business logic
 		updatePurchasedAmount(orders, lineItems);
 		updateCategories(orders, lineItems);
 		

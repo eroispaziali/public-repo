@@ -11,6 +11,10 @@ after update, before delete, before insert, before update) {
 	
 	if (Trigger.isAfter && Trigger.isDelete) {
     	LineItemTriggerHandler.handle(Trigger.old);
+	}
+	
+	if (Trigger.isAfter && Trigger.isUnDelete) {
+    	LineItemTriggerHandler.handle(Trigger.new);
 	}	
 		
 	
