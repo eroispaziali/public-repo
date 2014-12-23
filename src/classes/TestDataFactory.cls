@@ -25,6 +25,5 @@ private class TestDataFactory {
 		Lot__c lot = new Lot__c(Product_Category__c = productCategory);
 		return lot;
 	}
-
     
 }

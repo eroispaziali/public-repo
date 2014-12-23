@@ -1,5 +1,8 @@
 public with sharing class LineItemTriggerHandler {
 		
+	/* Public methods
+	========================= */
+			
 	public static void handle(List<Line_Item__c> items) {
 		
 		// collect related orders
@@ -17,6 +20,9 @@ public with sharing class LineItemTriggerHandler {
 		updateCategories(orders, lineItems);
 		update orders;
 	}
+	
+	/* Business logic
+	========================= */
 	
 	private static void updatePurchasedAmount(List<Order__c> orders, List<Line_Item__c> lineItems) {
 		Map<Id, Decimal> orderToAmountMap = new Map<Id, Decimal>();
@@ -43,9 +49,9 @@ public with sharing class LineItemTriggerHandler {
 			o.Product_Category_Units_2__c = (ranking!=null && ranking.size()>1) ? ranking.get(1).units : null;
 		}
 	}
-	
 
-	/* INNER CLASSES BELOW */
+	/* Inner classes
+	========================= */
 	
 	// Sortable wrapper for product categories
 	private class CategoryWrapper implements Comparable {
