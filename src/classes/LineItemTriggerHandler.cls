@@ -29,7 +29,7 @@ public with sharing class LineItemTriggerHandler {
 		for (Line_Item__c i : lineItems) {
 			Decimal thisOrderAmount = orderToAmountMap.get(i.Order__c);
 			thisOrderAmount = (thisOrderAmount!=null) ? thisOrderAmount : 0; 
-			thisOrderAmount = thisOrderAmount + i.Amount__c; 
+			thisOrderAmount += i.Amount__c; 
 			orderToAmountMap.put(i.Order__c, thisOrderAmount);
 		}
 		for (Order__c o : orders) {

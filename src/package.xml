@@ -2,6 +2,7 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>LineItemTriggerHandler</members>
+        <members>LineItemTriggerTest</members>
         <members>OliTriggerHandler</members>
         <members>OliTriggerHandlerTest</members>
         <members>TestDataFactory</members>
