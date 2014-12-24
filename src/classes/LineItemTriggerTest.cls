@@ -26,13 +26,15 @@ private class LineItemTriggerTest {
 	private static final Decimal TEST_PRICE_APPLES = 2;
 	private static final Decimal TEST_PRICE_PEARS = 3;
 	
+	//TODO: validate application security
+	
 	@IsTest(seeAllData=false)
 	private static void testOrdersWithManyLineItems() {
 		
 		// Prepare data (accounts, lots, orders)
-		Account a = TestDataFactory.createAccount();
-		Account b = TestDataFactory.createAccount();
-		insert new List<Account> { a,b };
+		Account myStore = TestDataFactory.createAccount();
+		Account anotherStore = TestDataFactory.createAccount();
+		insert new List<Account> { myStore,anotherStore };
 		
 		Lot__c apples = TestDataFactory.createLot('apples', TEST_PRICE_APPLES);
     	Lot__c pears = TestDataFactory.createLot('pears', TEST_PRICE_PEARS);
@@ -40,9 +42,9 @@ private class LineItemTriggerTest {
     	List<Lot__c> lots = new List<Lot__c> { pears, oranges, apples }; 
     	insert lots;
     	
-    	Order__c myOrder = TestDataFactory.createOrder(a);
-    	Order__c anotherOrder = TestDataFactory.createOrder(a);
-    	Order__c someoneElsesOrder = TestDataFactory.createOrder(b);
+    	Order__c myOrder = TestDataFactory.createOrder(myStore);
+    	Order__c anotherOrder = TestDataFactory.createOrder(myStore);
+    	Order__c someoneElsesOrder = TestDataFactory.createOrder(anotherStore);
     	insert new List<Order__c> { myOrder, anotherOrder, someoneElsesOrder };
     	
     	/* Bulk INSERT
