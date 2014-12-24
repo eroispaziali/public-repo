@@ -47,6 +47,7 @@ private class LineItemTriggerTest {
     	Order__c someoneElsesOrder = TestDataFactory.createOrder(anotherStore);
     	insert new List<Order__c> { myOrder, anotherOrder, someoneElsesOrder };
     	
+    	
     	/* Bulk INSERT
     	 * Create many orders and line items in the same transactions, ensure that logic works without order overlaps 
     	=============================================================================================================== */
@@ -76,6 +77,7 @@ private class LineItemTriggerTest {
     	System.assertEquals('apples', myOrder.Product_Category_2__c, 'Second product category is incorrect on insert');
     	System.assertEquals(10, myOrder.Product_Category_Units_2__c, 'Second product category units are incorrect on insert');
 
+
     	/* BULK UPDATE
     	 * Update some line items with different number of units, ensure logic works
     	============================================================================== */
@@ -92,6 +94,7 @@ private class LineItemTriggerTest {
     	System.assertEquals('pears', myOrder.Product_Category_2__c, 'Second product category is incorrect on update');
     	System.assertEquals(11, myOrder.Product_Category_Units_2__c, 'Second product category units are incorrect on update');
     	
+    	
     	/* BULK DELETE
     	 * Delete something from the order, but leave something else in, ensure logic works
     	===================================================================================== */
@@ -104,6 +107,7 @@ private class LineItemTriggerTest {
     	System.assertEquals(11, myOrder.Product_Category_Units_1__c, 'First product category units are incorrect on delete');
     	System.assertEquals(null, myOrder.Product_Category_2__c, 'Second product category should be null on delete');
     	System.assertEquals(null, myOrder.Product_Category_Units_2__c, 'Second product category should be null on delete');
+    	
     	
 		/* BULK UNDELETE
 	 	 * Restore what was removed from the order above, ensure logic works
@@ -132,7 +136,6 @@ private class LineItemTriggerTest {
     	System.assertEquals(null, myOrder.Product_Category_Units_1__c, 'First product category units should be null on an empty order');
     	System.assertEquals(null, myOrder.Product_Category_2__c, 'Second product category should be null on an empty order');
     	System.assertEquals(null, myOrder.Product_Category_Units_2__c, 'Second product category should be null on an empty order');
-		
 	}
     
 }
