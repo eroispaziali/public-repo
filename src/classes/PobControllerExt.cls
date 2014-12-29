@@ -8,26 +8,25 @@ public with sharing class PobControllerExt {
 	
 	// Records
 	public Order__c po {get;set;}
-	public List<Lot__c> lots {get;set;}
 	public List<Wrapper> wrappers {get;set;}
 	
 	// Private stuff
+	private List<Lot__c> lots;
 	private Map<Id, Wrapper> lot2Wrappers = new Map<Id, Wrapper>();
 	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>(); 
 	private Integer currentPage;
 	private Integer pageOffset;
 	private Integer pageSize = 5;
-	private Integer totalPages = 0;
-	private Integer recordCount = 0;
-	
+	private Integer totalPages;
+	private Integer recordCount;
 	
 	// Constructor
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		po = (Order__c) stdController.getRecord();
 		wrappers = new List<Wrapper>();
 		
-		// load line items, if any
 		if (isEdit()) {
+			// existing PO
 			heading = po.Name;
 			List<Line_Item__c> lineItems = [
 				SELECT Units__c, Lot__c, Amount__c 
@@ -38,10 +37,11 @@ public with sharing class PobControllerExt {
 				quantityMap.put(li.Id, li.Units__c);	
 			}
 		} else {
+			// new PO
 			heading = Label.POB_Heading_New;
 		}
 		
-		countRecords();
+		updateRecordCount();
 		goToPage(1);
 	}
 	
@@ -92,7 +92,6 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
-	
 	// Utility methods - stuff
 	private void goToPage(Integer page) {
 		
@@ -119,7 +118,7 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
-	private void countRecords() {
+	private void updateRecordCount() {
 		List<AggregateResult> ar = [SELECT COUNT(Id) c FROM Lot__c];
 		recordCount = (ar.size()>0) ? (Integer) ar.get(0).get('c') : null;
 		totalPages = recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
@@ -132,18 +131,19 @@ public with sharing class PobControllerExt {
 	
 	// Inner classes
 	public class Wrapper {
+		
 		public Decimal units {set;get;}
 		public Lot__c product {set;get;}
+		
 		public Wrapper(Lot__c product) {
 			this.units = 0;
 			this.product = product;
 		}
+		
 		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;
 			this.product = product;
 		}
 	}
 	
-
-
 }
