@@ -13,7 +13,7 @@ public with sharing class PobControllerExt {
 	
 	// Private stuff
 	private Map<Id, Wrapper> lot2Wrappers = new Map<Id, Wrapper>();
-	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>();
+	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>(); 
 	private Integer currentPage;
 	private Integer pageOffset;
 	private Integer pageSize = 5;
@@ -29,7 +29,11 @@ public with sharing class PobControllerExt {
 		// load line items, if any
 		if (isEdit()) {
 			heading = po.Name;
-			List<Line_Item__c> lineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
+			List<Line_Item__c> lineItems = [
+				SELECT Units__c, Lot__c, Amount__c 
+				FROM Line_Item__c 
+				WHERE Order__c = :po.Id
+			];
 			for (Line_Item__c li : lineItems) {
 				quantityMap.put(li.Id, li.Units__c);	
 			}
@@ -66,6 +70,14 @@ public with sharing class PobControllerExt {
 	
 	public boolean getNextDisabled() {
 		return (currentPage<totalPages) ? false : true;
+	}
+	
+	public Integer getNumberOfPages() {
+		return totalPages;
+	}
+	
+	public Integer getCurrentPage() {
+		return currentPage;
 	}
 	
 	public void nextPage() {

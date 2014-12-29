@@ -1,12 +1,11 @@
 <apex:page standardController="Order__c" extensions="PobControllerExt">
 	
-	<!-- Error messages first
+	<!-- Error messages
 	============================= -->
 	<apex:pageMessages />
 	
 	<apex:sectionHeader title="{!$Label.POB_Title}" subtitle="{!heading}"/>
 	<apex:form >
-		
 		<apex:pageBlock title="{!$Label.POB_Title}" mode="edit">
 		
 			<!-- Buttons
@@ -52,32 +51,32 @@
 		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
 		   
-		   <!-- Table
+		   <!-- Product Lots Table
 		   ============================= -->
 		   <apex:pageBlockSection columns="1" >
-		   		<apex:outputPanel id="table">	
-					<apex:pageBlockTable var="a" value="{!wrappers}">
+		   		<apex:outputPanel >	
+					<apex:pageBlockTable var="item" value="{!wrappers}">
 						<apex:column headerValue="Units">
-							<apex:inputText value="{!a.units}"/>
+							<apex:inputText value="{!item.units}"/>
 						</apex:column>
-						<apex:column headerValue="Product">{!a.product.Product__c}</apex:column>
-						<apex:column headerValue="Lot Number">{!a.product.name}</apex:column>
-						<apex:column headerValue="Unit Price">{!a.product.Unit_Price__c}</apex:column>
-						<apex:column headerValue="Product Category">{!a.product.Product_Category__c}</apex:column>
-						<apex:column headerValue="Remaining Units">{!a.product.Remaining__c}</apex:column>
+						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
+						<apex:column headerValue="Lot Number">{!item.product.name}</apex:column>
+						<apex:column headerValue="Unit Price">{!item.product.Unit_Price__c}</apex:column>
+						<apex:column headerValue="Product Category">{!item.product.Product_Category__c}</apex:column>
+						<apex:column headerValue="Remaining Units">{!item.product.Remaining__c}</apex:column>
 					</apex:pageBlockTable>
 				</apex:outputPanel>
 			</apex:pageBlockSection>
 			
-		   <!-- Pagination control
+		   <!-- Pagination
 		   ============================= -->
 			<apex:pageBlockSection >
 				<apex:panelGrid columns="5">
 					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}"/>
 					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}"/>
 					<apex:outputText value="{!$Label.POB_Page}">
-						<apex:param value="0"/>
-		      			<apex:param value="10"/>
+						<apex:param value="{!currentPage}"/>
+		      			<apex:param value="{!numberOfPages}"/>
 					</apex:outputText>
 					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}"/>
 					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}"/>
