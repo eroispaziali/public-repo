@@ -53,6 +53,19 @@ public with sharing class PobControllerExt {
 		myOffset -= ITEMS_PER_PAGE;
 	}
 	
+	public class Wrapper {
+		public Integer units {set;get;}
+		public Lot__c product {set;get;}
+		public Wrapper(Lot__c product) {
+			this.units = 0;
+			this.product = product;
+		}
+		public Wrapper(Lot__c product, Integer units) {
+			this.units = units;
+			this.product = product;
+		}
+	}
+	
 
 
 }
