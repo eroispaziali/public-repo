@@ -1,32 +1,47 @@
 public with sharing class PobControllerExt {
 	
+	// Summary, filter, etc
 	public String heading {get;set;}
 	public String categoryFilter {get;set;}
-	
-	// Summary
 	public Integer units {get;set;}
 	public Decimal pricePerUnit {get;set;}
 	
-	
+	// Records
 	public Order__c po {get;set;}
 	public List<Lot__c> lots {get;set;}
+	public List<Wrapper> wrappers {get;set;}
 	
-	// Paging stuff
-	private static final Integer ITEMS_PER_PAGE = 10;
-	private Integer myOffset {get;set;}
+	// Private stuff
+	private Map<Id, Wrapper> lot2Wrappers = new Map<Id, Wrapper>();
+	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>();
+	private Integer currentPage;
+	private Integer pageOffset;
+	private Integer pageSize = 5;
+	private Integer totalPages = 0;
+	private Integer recordCount = 0;
 	
 	
+	// Constructor
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		po = (Order__c) stdController.getRecord();
-		heading = (po!=null && po.Id!=null) ? po.Name : Label.POB_Heading_New;
-		setPage(1);
+		wrappers = new List<Wrapper>();
+		
+		// load line items, if any
+		if (isEdit()) {
+			heading = po.Name;
+			List<Line_Item__c> lineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
+			for (Line_Item__c li : lineItems) {
+				quantityMap.put(li.Id, li.Units__c);	
+			}
+		} else {
+			heading = Label.POB_Heading_New;
+		}
+		
+		countRecords();
+		goToPage(1);
 	}
 	
-	private void setPage(Integer page) {
-		myOffset = 0;
-		lots = [SELECT Id,Name,Product__c, Product_Category__c, Unit_Price__c,Remaining__c FROM Lot__c ORDER BY Name LIMIT :ITEMS_PER_PAGE OFFSET :myOffset];
-	}
-	
+	// Exposed methods
 	public List<SelectOption> getFilterValues () {
 		List<SelectOption> options = new List<SelectOption>();
 		options.add(new SelectOption('', Label.POB_NoFilter));
@@ -38,29 +53,80 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void firstPage() {
-		myOffset = 0;
+		goToPage(1);
 	}
 	
-	public void lastPage() {
-		
+	public void lastPage() { 
+		goToPage(totalPages);
+	}
+	
+	public boolean getPrevDisabled() {
+		return (currentPage > 1) ? false : true;
+	}
+	
+	public boolean getNextDisabled() {
+		return (currentPage<totalPages) ? false : true;
 	}
 	
 	public void nextPage() {
-		myOffset =+ ITEMS_PER_PAGE;
+		if (!getNextDisabled()) {
+			goToPage(currentPage+1);
+		}
 	}
 	
 	public void prevPage() {
-		myOffset -= ITEMS_PER_PAGE;
+		if (!getPrevDisabled()) {
+			goToPage(currentPage-1);
+		}
 	}
 	
+	
+	// Utility methods - stuff
+	private void goToPage(Integer page) {
+		
+		// calculate offset
+		currentPage = (page >= 1) ? page : 1;
+		pageOffset = (page-1) * pageSize;
+		pageOffset = (pageOffset!=null && pageOffset>=0) ? pageOffset : 0;
+
+		// load all products in the page ...
+		lots = [
+			SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
+			FROM Lot__c 
+			ORDER BY Name 
+			LIMIT :pageSize 
+			OFFSET :pageOffset
+		];
+		
+		// ... then get/create wrappers for all fetched products		
+		for (Lot__c l : lots) { 
+			Decimal units = quantityMap.get(l.id)!=null ? quantityMap.get(l.id) : 0;
+			Wrapper w = lot2Wrappers.get(l.id) !=null ? lot2Wrappers.get(l.id) : new Wrapper(l, units);
+			wrappers.add(w);
+			lot2Wrappers.put(l.id, w);
+		}
+	}
+	
+	private void countRecords() {
+		List<AggregateResult> ar = [SELECT COUNT(Id) c FROM Lot__c];
+		recordCount = (ar.size()>0) ? (Integer) ar.get(0).get('c') : null;
+		totalPages = recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
+	}
+	
+	// Utility methods
+	private boolean isEdit() {
+		return (po!=null && po.Id!=null) ? true : false;
+	} 
+	
+	// Inner classes
 	public class Wrapper {
-		public Integer units {set;get;}
+		public Decimal units {set;get;}
 		public Lot__c product {set;get;}
 		public Wrapper(Lot__c product) {
 			this.units = 0;
 			this.product = product;
 		}
-		public Wrapper(Lot__c product, Integer units) {
+		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;
 			this.product = product;
 		}

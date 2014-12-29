@@ -56,15 +56,15 @@
 		   ============================= -->
 		   <apex:pageBlockSection columns="1" >
 		   		<apex:outputPanel id="table">	
-					<apex:pageBlockTable var="a" value="{!lots}" width="100%">
+					<apex:pageBlockTable var="a" value="{!wrappers}">
 						<apex:column headerValue="Units">
-							Unit input box here
+							<apex:inputText value="{!a.units}"/>
 						</apex:column>
-						<apex:column headerValue="Product">{!a.Product__c}</apex:column>
-						<apex:column headerValue="Lot Number">{!a.name}</apex:column>
-						<apex:column headerValue="Unit Price">{!a.Unit_Price__c}</apex:column>
-						<apex:column headerValue="Product Category">{!a.Product_Category__c}</apex:column>
-						<apex:column headerValue="Remaining Units">{!a.Remaining__c}</apex:column>
+						<apex:column headerValue="Product">{!a.product.Product__c}</apex:column>
+						<apex:column headerValue="Lot Number">{!a.product.name}</apex:column>
+						<apex:column headerValue="Unit Price">{!a.product.Unit_Price__c}</apex:column>
+						<apex:column headerValue="Product Category">{!a.product.Product_Category__c}</apex:column>
+						<apex:column headerValue="Remaining Units">{!a.product.Remaining__c}</apex:column>
 					</apex:pageBlockTable>
 				</apex:outputPanel>
 			</apex:pageBlockSection>
@@ -73,14 +73,14 @@
 		   ============================= -->
 			<apex:pageBlockSection >
 				<apex:panelGrid columns="5">
-					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}"/>
-					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}"/>
+					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}"/>
+					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}"/>
 					<apex:outputText value="{!$Label.POB_Page}">
 						<apex:param value="0"/>
 		      			<apex:param value="10"/>
 					</apex:outputText>
-					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" />
-					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" />
+					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}"/>
+					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}"/>
 				</apex:panelGrid>
 			</apex:pageBlockSection>
    		</apex:pageBlock>
