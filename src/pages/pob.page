@@ -1,56 +1,89 @@
 <apex:page standardController="Order__c" extensions="PobControllerExt">
 	
+	<!-- Error messages first
+	============================= -->
 	<apex:pageMessages />
-	<apex:sectionHeader title="PO Builder" subtitle="{!heading}"/>
 	
-	
+	<apex:sectionHeader title="{!$Label.POB_Title}" subtitle="{!heading}"/>
 	<apex:form >
-	
-		<!-- Block 1: FILTER
-		============================= -->
-		<apex:pageBlock title="Purchase Order Builder" mode="edit">
+		
+		<apex:pageBlock title="{!$Label.POB_Title}" mode="edit">
+		
+			<!-- Buttons
+			============================= -->
 			<apex:pageBlockButtons >
-				<apex:commandButton value="Save" action="{!save}"/>
-				<apex:commandButton value="Cancel" action="{!cancel}"/>
+				<apex:commandButton value="{!$Label.POB_Save}" action="{!save}"/>
+				<apex:commandButton value="{!$Label.POB_Cancel}" action="{!cancel}"/>
 			</apex:pageBlockButtons>
 			
-			<apex:pageBlockSection >
-				<apex:outputPanel >
-					<apex:actionRegion >
-						<apex:pageBlockSectionItem >	    
-							<apex:outputLabel value="Product Category Filter" for="filter"/>
-					  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
-								<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
-				      		</apex:selectList>
-				      	</apex:pageBlockSectionItem>
-			     	</apex:actionRegion>
-			     	
-			   </apex:outputPanel>
+			<!-- Details
+			============================= -->
+			<apex:pageBlockSection title="Details" columns="2" id="details">
+				<apex:inputField value="{!Order__c.Name}" required="true" />
+				<apex:inputField value="{!Order__c.Status__c}" required="true" />
+				<apex:inputField value="{!Order__c.Budget__c}" required="true" />
+				<apex:inputField value="{!Order__c.Store__c}" required="true" />
+			</apex:pageBlockSection>
+			
+			<!-- Summary
+			============================= -->
+			<apex:pageBlockSection title="{!$Label.POB_Summary}" columns="2" id="summary">
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="{!$Label.POB_Units}"/>
+					<apex:outputText value="{!units}"/>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="{!$Label.POB_PricePerUnit}"/>
+					<apex:outputText value="{!pricePerUnit}"/>
+				</apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+
+			<!-- Filter & load indicator
+			================================ -->			
+			<apex:pageBlockSection title="Product Lots" id="lots" columns="2">
+				<apex:pageBlockSectionItem >	    
+					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
+			  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
+						<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
+		      		</apex:selectList>
+		      	</apex:pageBlockSectionItem>
+		      	<apex:pageBlockSectionItem >
+		      		Load indicator here...	
+		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
+		   
+		   <!-- Table
+		   ============================= -->
+		   <apex:pageBlockSection columns="1" >
+		   		<apex:outputPanel id="table">	
+					<apex:pageBlockTable var="a" value="{!lots}" width="100%">
+						<apex:column headerValue="Units">
+							Unit input box here
+						</apex:column>
+						<apex:column headerValue="Product">{!a.Product__c}</apex:column>
+						<apex:column headerValue="Lot Number">{!a.name}</apex:column>
+						<apex:column headerValue="Unit Price">{!a.Unit_Price__c}</apex:column>
+						<apex:column headerValue="Product Category">{!a.Product_Category__c}</apex:column>
+						<apex:column headerValue="Remaining Units">{!a.Remaining__c}</apex:column>
+					</apex:pageBlockTable>
+				</apex:outputPanel>
+			</apex:pageBlockSection>
+			
+		   <!-- Pagination control
+		   ============================= -->
+			<apex:pageBlockSection >
+				<apex:panelGrid columns="5">
+					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}"/>
+					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}"/>
+					<apex:outputText value="{!$Label.POB_Page}">
+						<apex:param value="0"/>
+		      			<apex:param value="10"/>
+					</apex:outputText>
+					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" />
+					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" />
+				</apex:panelGrid>
+			</apex:pageBlockSection>
    		</apex:pageBlock>
    
-	
-		<!-- Block 2: TABLE
-		=============================--> 
-		<apex:pageBlock title="Product Lots">
-			<apex:pageBlockSection >
-				<apex:dataList var="a" value="{!lots}" type="1">
-					{!a.name}
-				</apex:dataList>
-			</apex:pageBlockSection>
-			<apex:panelGrid columns="5">
-				<apex:commandButton action="{!first}" value="{!$Label.POB_First}"/>
-				<apex:commandButton action="{!previous}" value="{!$Label.POB_Prev}"/>
-				<apex:outputText value="{!$Label.POB_Page}">
-					<apex:param value="0"/>
-	      				<apex:param value="10"/>
-				</apex:outputText>
-				<apex:commandButton action="{!next}" value="{!$Label.POB_Next}" />
-				<apex:commandButton action="{!last}" value="{!$Label.POB_Last}" />
-			</apex:panelGrid>
-		
-		</apex:pageBlock>
-	
 	</apex:form>
-	
 </apex:page>

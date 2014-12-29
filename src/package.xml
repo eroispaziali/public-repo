@@ -3,7 +3,6 @@
     <types>
         <members>LineItemTriggerHandler</members>
         <members>LineItemTriggerTest</members>
-        <members>LotControllerExt</members>
         <members>PobControllerExt</members>
         <members>TestDataFactory</members>
         <name>ApexClass</name>
