@@ -84,7 +84,8 @@ private class LineItemTriggerTest {
     	
     	
     	/* Bulk INSERT
-    	 * Create many orders and line items in the same transactions, ensure that logic works without order overlaps 
+    	 * Create many orders and line items in the same transactions, ensure that logic works 
+    	 * without messing up with different orders. 
     	=============================================================================================================== */
     	List<Line_Item__c> lineItems = new List<Line_Item__c>();
     	Line_Item__c myApples = TestDataFactory.createLineItem(myOrder, apples, 10);

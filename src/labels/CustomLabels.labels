@@ -17,6 +17,22 @@
         <value>Category Filter</value>
     </labels>
     <labels>
+        <fullName>POB_First</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_First</shortDescription>
+        <value>First</value>
+    </labels>
+    <labels>
+        <fullName>POB_Last</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Last</shortDescription>
+        <value>Last</value>
+    </labels>
+    <labels>
         <fullName>POB_Lots</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>

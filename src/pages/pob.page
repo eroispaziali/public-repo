@@ -1,5 +1,34 @@
-<apex:page standardController="Lot__c" recordSetvar="lots">
+<apex:page standardController="Order__c" extensions="PobControllerExt">
+	
 	<apex:pageMessages />
+	<apex:sectionHeader title="PO Builder" subtitle="{!heading}"/>
+	
+	
+	
+	
+	<!-- Filter
+	============================= -->
+	<apex:pageBlock >
+	<apex:form >
+		<apex:pageBlockSection >
+			<apex:outputPanel >
+				<apex:actionRegion >
+					<apex:pageBlockSectionItem >	    
+						<apex:outputLabel value="Product Category Filter" for="filter"/>
+				  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
+							<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
+			      		</apex:selectList>
+			      	</apex:pageBlockSectionItem>
+		     	</apex:actionRegion>
+		     	
+		   </apex:outputPanel>
+	   </apex:pageBlockSection>
+   
+   </apex:form>
+   </apex:pageBlock>
+	
+	<!-- Table
+	============================= 
 	<apex:pageBlock title="Product Lots">
 		<apex:form id="theForm">
 			<apex:pageBlockSection >
@@ -8,11 +37,16 @@
 				</apex:dataList>
 			</apex:pageBlockSection>
 			<apex:panelGrid columns="5">
-				<apex:commandButton action="{!first}" value="First"/>
-				<apex:commandButton action="{!previous}" value="Previous"/>
-				<apex:commandButton action="{!next}" value="Next" />
-				<apex:commandButton action="{!last}" value="Last" />
+				<apex:commandButton action="{!first}" value="{!$Label.POB_First}"/>
+				<apex:commandButton action="{!previous}" value="{!$Label.POB_Prev}"/>
+				<apex:outputText value="{!$Label.POB_Page}">
+					<apex:param value="0"/>
+       				<apex:param value="10"/>
+				</apex:outputText>
+				<apex:commandButton action="{!next}" value="{!$Label.POB_Next}" />
+				<apex:commandButton action="{!last}" value="{!$Label.POB_Last}" />
 			</apex:panelGrid>
 		</apex:form> 
 	</apex:pageBlock>
+	-->
 </apex:page>
