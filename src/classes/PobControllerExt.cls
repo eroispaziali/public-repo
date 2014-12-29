@@ -1,21 +1,16 @@
 public with sharing class PobControllerExt {
 	
-	public Integer pageNumber {get;set;}
-	public Integer numberOfPages {get;set;}
-	
 	public String heading {get;set;}
 	public String categoryFilter {get;set;}
 	public Order__c po {get;set;}
+	public List<Lot__c> lots {get;set;}
 
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		po = (Order__c) stdController.getRecord();
-		heading = (po!=null) ? po.Name : Label.POB_Heading_New;
+		heading = (po!=null && po.Id!=null) ? po.Name : Label.POB_Heading_New;
+		lots = [SELECT Id,Name FROM Lot__c ORDER BY Name];
 	}
 	
-	public PobControllerExt(ApexPages.StandardSetController stdController) {
-		po = (Order__c) stdController.getRecord();
-		heading = (po!=null) ? po.Name : Label.POB_Heading_New;
-	}
 	
 	public List<SelectOption> getFilterValues () {
 		List<SelectOption> options = new List<SelectOption>();

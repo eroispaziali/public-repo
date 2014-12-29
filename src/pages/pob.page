@@ -4,33 +4,35 @@
 	<apex:sectionHeader title="PO Builder" subtitle="{!heading}"/>
 	
 	
-	
-	
-	<!-- Filter
-	============================= -->
-	<apex:pageBlock >
 	<apex:form >
-		<apex:pageBlockSection >
-			<apex:outputPanel >
-				<apex:actionRegion >
-					<apex:pageBlockSectionItem >	    
-						<apex:outputLabel value="Product Category Filter" for="filter"/>
-				  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
-							<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
-			      		</apex:selectList>
-			      	</apex:pageBlockSectionItem>
-		     	</apex:actionRegion>
-		     	
-		   </apex:outputPanel>
-	   </apex:pageBlockSection>
-   
-   </apex:form>
-   </apex:pageBlock>
 	
-	<!-- Table
-	============================= 
-	<apex:pageBlock title="Product Lots">
-		<apex:form id="theForm">
+		<!-- Block 1: FILTER
+		============================= -->
+		<apex:pageBlock title="Purchase Order Builder" mode="edit">
+			<apex:pageBlockButtons >
+				<apex:commandButton value="Save" action="{!save}"/>
+				<apex:commandButton value="Cancel" action="{!cancel}"/>
+			</apex:pageBlockButtons>
+			
+			<apex:pageBlockSection >
+				<apex:outputPanel >
+					<apex:actionRegion >
+						<apex:pageBlockSectionItem >	    
+							<apex:outputLabel value="Product Category Filter" for="filter"/>
+					  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
+								<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
+				      		</apex:selectList>
+				      	</apex:pageBlockSectionItem>
+			     	</apex:actionRegion>
+			     	
+			   </apex:outputPanel>
+		   </apex:pageBlockSection>
+   		</apex:pageBlock>
+   
+	
+		<!-- Block 2: TABLE
+		=============================--> 
+		<apex:pageBlock title="Product Lots">
 			<apex:pageBlockSection >
 				<apex:dataList var="a" value="{!lots}" type="1">
 					{!a.name}
@@ -41,12 +43,14 @@
 				<apex:commandButton action="{!previous}" value="{!$Label.POB_Prev}"/>
 				<apex:outputText value="{!$Label.POB_Page}">
 					<apex:param value="0"/>
-       				<apex:param value="10"/>
+	      				<apex:param value="10"/>
 				</apex:outputText>
 				<apex:commandButton action="{!next}" value="{!$Label.POB_Next}" />
 				<apex:commandButton action="{!last}" value="{!$Label.POB_Last}" />
 			</apex:panelGrid>
-		</apex:form> 
-	</apex:pageBlock>
-	-->
+		
+		</apex:pageBlock>
+	
+	</apex:form>
+	
 </apex:page>
