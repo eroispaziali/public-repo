@@ -22,6 +22,10 @@
 @isTest
 private class LineItemTriggerTest {
 	
+	private static final Integer TEST_VOLUMES_NUMBER_OF_ACCOUNTS = 100;
+	private static final Integer TEST_VOLUMES_NUMBER_OF_LOTS = 1000;
+	private static final Integer TEST_VOLUMES_LINE_ITEMS_PER_PURCHASE = 10;
+	
 	private static final Decimal TEST_PRICE_ORANGES = 4;
 	private static final Decimal TEST_PRICE_APPLES = 2;
 	private static final Decimal TEST_PRICE_PEARS = 3;
@@ -32,23 +36,30 @@ private class LineItemTriggerTest {
 	private static void testLargeVolumes() {
 		
 		// Prepare data
-		List<Account> accounts = TestDataFactory.createAccounts(10);
+		List<Account> accounts = TestDataFactory.createAccounts(TEST_VOLUMES_NUMBER_OF_ACCOUNTS);
 		insert accounts;
 		List<Order__c> orders = TestDataFactory.createOrders(accounts);
 		insert orders;
+		List<Lot__c> allTheLots = TestDataFactory.createLots(TEST_VOLUMES_NUMBER_OF_LOTS);
+		insert allTheLots;
 		
-		List<Lot__c> products = TestDataFactory.createLots(1000);
-		insert products;
+		List<Lot__c> someLots = new List<Lot__c>();
+		for (Integer i=0; i<TEST_VOLUMES_LINE_ITEMS_PER_PURCHASE; i++) {
+			someLots.add(allTheLots[i]);
+		}
 		
-		/* TEST VOLUMES
-    	 * Make sure code works with 400 records without breaking governor limits
+		/* TEST ON VOLUMES ONLY
+    	 * Make sure code scale to the required volumes without breaking governor limits
+    	 * 1000 product lots, 10 OLI per order, 10 Orders per Purchase agreement
+    	 * WARNING: no assertions on logic here, only volumes are tested. Logic is tested below.
     	=============================================================================================================== */
-		List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, products, 1);
+		List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, someLots, 1);
+		
 		Test.startTest();
-			insert largeBulk;
-			System.assert(Limits.getLimitCpuTime()>=0, 'Transactions consumed CPU transaction');
-			System.assert(Limits.getLimitDMLStatements()>=0, 'Governor limits hit - DML statements');
-			System.assert(Limits.getLimitHeapSize()>=0, 'Governor limits hit - Heap Size statements');
+		insert largeBulk;
+		System.assert(Limits.getLimitCpuTime()>=0, 'Large Volumes Issue - CPU time');
+		System.assert(Limits.getLimitDMLStatements()>=0, 'Large Volumes Issue - DML statements');
+		System.assert(Limits.getLimitHeapSize()>=0, 'Large Volumes Issue - Heap size');
 		Test.stopTest();
 	}
 	
@@ -58,7 +69,7 @@ private class LineItemTriggerTest {
 		// Prepare data (accounts, lots, orders)
 		Account myStore = TestDataFactory.createAccount();
 		Account anotherStore = TestDataFactory.createAccount();
-		insert new List<Account> { myStore,anotherStore };
+		insert new List<Account> { myStore, anotherStore };
 		
 		Lot__c apples = TestDataFactory.createLot('apples', TEST_PRICE_APPLES);
     	Lot__c pears = TestDataFactory.createLot('pears', TEST_PRICE_PEARS);
@@ -93,9 +104,10 @@ private class LineItemTriggerTest {
     	lineItems.add( TestDataFactory.createLineItem(someoneElsesOrder, pears, 2) );
     	insert lineItems;
     	
-		// Reload myOrder and assert results on insert    	
+		// Reload myOrder and assert results on insert (for both price and 1st + 2nd category)
+		Decimal expectedAmount = 9*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 10*TEST_PRICE_APPLES;
     	myOrder = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id = :myOrder.Id][0];
-    	System.assertEquals( 9*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 10*TEST_PRICE_APPLES, myOrder.Purchased__c, 'Purchased price is incorrect on insert');
+    	System.assertEquals(expectedAmount, myOrder.Purchased__c, 'Purchased price is incorrect on insert');
     	System.assertEquals('pears', myOrder.Product_Category_1__c,  'First product category is incorrect on insert');
     	System.assertEquals(11, myOrder.Product_Category_Units_1__c, 'First product category units are incorrect on insert');
     	System.assertEquals('apples', myOrder.Product_Category_2__c, 'Second product category is incorrect on insert');
@@ -110,9 +122,10 @@ private class LineItemTriggerTest {
 		myOranges.Units__c = 7;
 		update orangesAndApples; 
 		
-		// Reload myOrder and check expected results
+		// Reload myOrder and check expected results (for both price and 1st + 2nd category)
 		myOrder = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id = :myOrder.Id][0];
-		System.assertEquals( 7*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 20*TEST_PRICE_APPLES, myOrder.Purchased__c, 'Purchased price is incorrect on update');
+		expectedAmount = 7*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 20*TEST_PRICE_APPLES;
+		System.assertEquals(expectedAmount, myOrder.Purchased__c, 'Purchased price is incorrect on update');
     	System.assertEquals('apples', myOrder.Product_Category_1__c,  'First product category is incorrect on update');
     	System.assertEquals(20, myOrder.Product_Category_Units_1__c, 'First product category units are incorrect on update');
     	System.assertEquals('pears', myOrder.Product_Category_2__c, 'Second product category is incorrect on update');
@@ -124,9 +137,10 @@ private class LineItemTriggerTest {
     	===================================================================================== */
     	delete orangesAndApples;
     	
-		// Reload myOrder and check expected results
+		// Reload myOrder and check expected results (for both price and 1st + 2nd category)
 		myOrder = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id = :myOrder.Id][0];
-		System.assertEquals( (6+5)*TEST_PRICE_PEARS, myOrder.Purchased__c, 'Purchased price is incorrect on delete');
+		expectedAmount = (6+5)*TEST_PRICE_PEARS;
+		System.assertEquals( expectedAmount, myOrder.Purchased__c, 'Purchased price is incorrect on delete');
     	System.assertEquals('pears', myOrder.Product_Category_1__c,  'First product category is incorrect on delete');
     	System.assertEquals(11, myOrder.Product_Category_Units_1__c, 'First product category units are incorrect on delete');
     	System.assertEquals(null, myOrder.Product_Category_2__c, 'Second product category should be null on delete');
@@ -138,9 +152,10 @@ private class LineItemTriggerTest {
     	====================================================================== */
     	undelete orangesAndApples;
     	
-    	// Reload myOrder and check expected results
+    	// Reload myOrder and check expected results (for both price and 1st + 2nd category)
 		myOrder = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id = :myOrder.Id][0];
-		System.assertEquals( 7*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 20*TEST_PRICE_APPLES, myOrder.Purchased__c, 'Purchased price is incorrect on undelete');
+		expectedAmount =  7*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 20*TEST_PRICE_APPLES;
+		System.assertEquals(expectedAmount, myOrder.Purchased__c, 'Purchased price is incorrect on undelete');
     	System.assertEquals('apples', myOrder.Product_Category_1__c,  'First product category is incorrect on undelete');
     	System.assertEquals(20, myOrder.Product_Category_Units_1__c, 'First product category units are incorrect on undelete');
     	System.assertEquals('pears', myOrder.Product_Category_2__c, 'Second product category is incorrect on undelete');
@@ -153,9 +168,10 @@ private class LineItemTriggerTest {
     	List<Line_Item__c> allMyOrderItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :myOrder.Id];
     	delete allMyOrderItems;
     	
-    	// Reload myOrder and check expected results
+    	// Reload myOrder and check expected results (for both price and 1st + 2nd category)
 		myOrder = [SELECT Purchased__c,Product_Category_1__c,Product_Category_Units_1__c,Product_Category_2__c,Product_Category_Units_2__c FROM Order__c WHERE Id = :myOrder.Id][0];
-		System.assertEquals(0, myOrder.Purchased__c, 'Purchased price is incorrect on and empty order');
+		expectedAmount = 0;
+		System.assertEquals(expectedAmount, myOrder.Purchased__c, 'Purchased price is incorrect on and empty order');
     	System.assertEquals(null, myOrder.Product_Category_1__c,  'First product category should be null on an empty order');
     	System.assertEquals(null, myOrder.Product_Category_Units_1__c, 'First product category units should be null on an empty order');
     	System.assertEquals(null, myOrder.Product_Category_2__c, 'Second product category should be null on an empty order');

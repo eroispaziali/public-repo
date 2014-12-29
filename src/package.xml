@@ -3,8 +3,13 @@
     <types>
         <members>LineItemTriggerHandler</members>
         <members>LineItemTriggerTest</members>
+        <members>PurchaseOrderBuilderController</members>
         <members>TestDataFactory</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>pob</members>
+        <name>ApexPage</name>
     </types>
     <types>
         <members>LineItemTrigger</members>
