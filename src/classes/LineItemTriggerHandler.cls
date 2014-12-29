@@ -21,8 +21,8 @@ public with sharing class LineItemTriggerHandler {
 		update orders;
 	}
 	
-	/* Business logic
-	========================= */
+	/* Utility methods (not exposed)
+	================================== */
 	
 	private static void updatePurchasedAmount(List<Order__c> orders, List<Line_Item__c> lineItems) {
 		Map<Id, Decimal> orderToAmountMap = new Map<Id, Decimal>();

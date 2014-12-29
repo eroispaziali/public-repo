@@ -40,21 +40,25 @@
 			<!-- Filter & load indicator
 			================================ -->			
 			<apex:pageBlockSection title="Product Lots" id="lots" columns="2">
-				<apex:pageBlockSectionItem >	    
+				<apex:pageBlockSectionItem >
+						  
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
-			  		<apex:selectList size="1" id="filter" value="{!categoryFilter}">
-						<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
-		      		</apex:selectList>
+					<apex:actionRegion >
+						<apex:actionSupport action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" />
+			  			<apex:selectList size="1" id="filter" value="{!categoryFilter}">
+							<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
+		      			</apex:selectList>
+			      		</apex:actionRegion>
 		      	</apex:pageBlockSectionItem>
 		      	<apex:pageBlockSectionItem >
-		      		Load indicator here...	
+		      		<apex:actionStatus id="loadingStatus" startText="Loading..." stopText="" />
 		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
 		   
 		   <!-- Product Lots Table
 		   ============================= -->
 		   <apex:pageBlockSection columns="1" >
-		   		<apex:outputPanel >	
+		   		<apex:outputPanel id="lots">	
 					<apex:pageBlockTable var="item" value="{!wrappers}">
 						<apex:column headerValue="Units">
 							<apex:inputText value="{!item.units}"/>
@@ -70,7 +74,7 @@
 			
 		   <!-- Pagination
 		   ============================= -->
-			<apex:pageBlockSection >
+			<apex:pageBlockSection id="pagination">
 				<apex:panelGrid columns="5">
 					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}"/>
 					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}"/>

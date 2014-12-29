@@ -2,9 +2,9 @@ public with sharing class PobControllerExt {
 	
 	// Summary, filter, etc
 	public String heading {get;set;}
-	public String categoryFilter {get;set;}
 	public Integer units {get;set;}
 	public Decimal pricePerUnit {get;set;}
+	public String categoryFilter {get;set;}
 	
 	// Records
 	public Order__c po {get;set;}
@@ -41,11 +41,12 @@ public with sharing class PobControllerExt {
 			heading = Label.POB_Heading_New;
 		}
 		
-		updateRecordCount();
-		goToPage(1);
+		resetFilter();
 	}
 	
-	// Exposed methods
+	/* Public methods
+	========================= */
+	
 	public List<SelectOption> getFilterValues () {
 		List<SelectOption> options = new List<SelectOption>();
 		options.add(new SelectOption('', Label.POB_NoFilter));
@@ -92,7 +93,20 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
-	// Utility methods - stuff
+	public void resetFilter() {
+		categoryFilter = null;
+		updateRecordCount();
+		goToPage(1);
+	}
+	
+	public void setFilter() {
+		updateRecordCount();
+		goToPage(1);
+	}
+	
+	/* Utility methods (not exposed)
+	================================== */
+	
 	private void goToPage(Integer page) {
 		
 		// calculate offset
@@ -101,13 +115,17 @@ public with sharing class PobControllerExt {
 		pageOffset = (pageOffset!=null && pageOffset>=0) ? pageOffset : 0;
 
 		// load all products in the page ...
-		lots = [
-			SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
-			FROM Lot__c 
-			ORDER BY Name 
-			LIMIT :pageSize 
-			OFFSET :pageOffset
-		];
+		if (isFilterEnabled()) {
+			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
+				FROM Lot__c WHERE Product_Category__c = :categoryFilter
+				ORDER BY Name 
+				LIMIT :pageSize OFFSET :pageOffset];
+		} else {
+			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
+				FROM Lot__c 
+				ORDER BY Name 
+				LIMIT :pageSize OFFSET :pageOffset];
+		}
 		
 		// ... then get/create wrappers for all fetched products		
 		for (Lot__c l : lots) { 
@@ -118,18 +136,28 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
+	private boolean isFilterEnabled() {
+		return (categoryFilter!=null && categoryFilter!='');
+	}
+	
 	private void updateRecordCount() {
-		List<AggregateResult> ar = [SELECT COUNT(Id) c FROM Lot__c];
+		List<AggregateResult> ar;
+		if (isFilterEnabled()) {
+			ar = [SELECT COUNT(Id) c FROM Lot__c WHERE Product_Category__c = :categoryFilter];
+		} else {
+			ar = [SELECT COUNT(Id) c FROM Lot__c];			
+		}
 		recordCount = (ar.size()>0) ? (Integer) ar.get(0).get('c') : null;
 		totalPages = recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
 	}
 	
-	// Utility methods
 	private boolean isEdit() {
 		return (po!=null && po.Id!=null) ? true : false;
 	} 
 	
-	// Inner classes
+	/* Inner classes
+	========================= */
+	
 	public class Wrapper {
 		
 		public Decimal units {set;get;}
