@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>POB_Details</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Details</shortDescription>
+        <value>Details</value>
+    </labels>
+    <labels>
+        <fullName>POB_Filter</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Filter</shortDescription>
+        <value>Category Filter</value>
+    </labels>
+    <labels>
+        <fullName>POB_Lots</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Lots</shortDescription>
+        <value>Product Lots</value>
+    </labels>
+    <labels>
+        <fullName>POB_Next</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Next</shortDescription>
+        <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>POB_Page</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Page</shortDescription>
+        <value>Page {0} of {1}</value>
+    </labels>
+    <labels>
+        <fullName>POB_Prev</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Prev</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>POB_Title</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Title</shortDescription>
+        <value>Purchase Order Builder</value>
+    </labels>
+    <labels>
+        <fullName>POB_Waiting</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Waiting</shortDescription>
+        <value>Updating Summary...</value>
+    </labels>
+</CustomLabels>

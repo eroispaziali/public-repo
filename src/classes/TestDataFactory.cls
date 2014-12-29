@@ -3,6 +3,7 @@ public class TestDataFactory {
 	
 	public static final String TEST_ACCOUNT_NAME = 'A Test Account';
 	public static final String TEST_LOT_NAME = 'A Test Lot';
+	public static final String TEST_LOT_CATEGORY = 'A Test Category';
 	public static final Integer TEST_LOT_SIZE = 100;
 	public static final Decimal TEST_LOT_PRICE = 10.0;
 	
@@ -87,13 +88,17 @@ public class TestDataFactory {
 		return myLot;
 	}
 	
-	public static List<Lot__c> createLots(String productCategory, Integer howMany) {
+	public static List<Lot__c> createLots(Integer howMany) {
+		return createLots(TEST_LOT_CATEGORY, howMany);
+	}
+	
+	public static List<Lot__c> createLots(String categoryName, Integer howMany) {
 		howMany = (howMany!=null && howMany!=0) ? Math.abs(howMany) : 1;
 		List<Lot__c> lots = new List<Lot__c>();
 		for (Integer i=0; i<howMany; i++) {
 			Lot__c lot = new Lot__c(
 				Product__c = TEST_LOT_NAME,
-				Product_Category__c = productCategory,
+				Product_Category__c = categoryName,
 				Lot_Size__c = TEST_LOT_SIZE,
 				Unit_Price__c = TEST_LOT_PRICE
 			);

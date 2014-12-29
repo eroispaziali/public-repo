@@ -29,6 +29,30 @@ private class LineItemTriggerTest {
 	//TODO: validate application security
 	
 	@IsTest(seeAllData=false)
+	private static void testLargeVolumes() {
+		
+		// Prepare data
+		List<Account> accounts = TestDataFactory.createAccounts(10);
+		insert accounts;
+		List<Order__c> orders = TestDataFactory.createOrders(accounts);
+		insert orders;
+		
+		List<Lot__c> products = TestDataFactory.createLots(1000);
+		insert products;
+		
+		/* TEST VOLUMES
+    	 * Make sure code works with 400 records without breaking governor limits
+    	=============================================================================================================== */
+		List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, products, 1);
+		Test.startTest();
+			insert largeBulk;
+			System.assert(Limits.getLimitCpuTime()>=0, 'Transactions consumed CPU transaction');
+			System.assert(Limits.getLimitDMLStatements()>=0, 'Governor limits hit - DML statements');
+			System.assert(Limits.getLimitHeapSize()>=0, 'Governor limits hit - Heap Size statements');
+		Test.stopTest();
+	}
+	
+	@IsTest(seeAllData=false)
 	private static void testOrdersWithManyLineItems() {
 		
 		// Prepare data (accounts, lots, orders)

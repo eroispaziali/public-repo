@@ -3,14 +3,16 @@
     <types>
         <members>LineItemTriggerHandler</members>
         <members>LineItemTriggerTest</members>
-        <members>OliTriggerHandler</members>
-        <members>OliTriggerHandlerTest</members>
         <members>TestDataFactory</members>
         <name>ApexClass</name>
     </types>
     <types>
         <members>LineItemTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>CustomLabels</members>
+        <name>CustomLabels</name>
     </types>
     <version>28.0</version>
 </Package>
