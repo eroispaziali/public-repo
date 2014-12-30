@@ -100,8 +100,8 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void setFilter() {
-		updateRecordCount();
 		goToPage(1);
+		updateRecordCount();
 	}
 	
 	/* Utility methods (not exposed)
@@ -130,13 +130,16 @@ public with sharing class PobControllerExt {
 		}
 		
 		// ... then get/create wrappers for all fetched products
-		wrappers.clear();		
+		wrappers.clear();
+		System.debug('*** Wrappers are ' + wrappers.size());		
 		for (Lot__c l : lots) { 
 			Decimal units = quantityMap.get(l.id)!=null ? quantityMap.get(l.id) : 0;
 			Wrapper w = lot2Wrappers.get(l.id) !=null ? lot2Wrappers.get(l.id) : new Wrapper(l, units);
 			wrappers.add(w);
 			lot2Wrappers.put(l.id, w);
 		}
+		System.debug('*** Wrappers are ' + wrappers.size());
+		
 	}
 	
 	private boolean isFilterEnabled() {

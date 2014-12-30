@@ -44,8 +44,8 @@
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
 					<apex:actionRegion >
 			  			<apex:selectList size="1" value="{!categoryFilter}">
-			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" />
-							<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
+			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true"/>
+							<apex:selectOptions value="{!filterValues}"/>
 		      			</apex:selectList>
 					</apex:actionRegion>
 		      	</apex:pageBlockSectionItem>
@@ -56,11 +56,11 @@
 		   
 		   <!-- Product Lots Table
 		   ============================= -->
-		   <apex:pageBlockSection columns="1" >
-		   		<apex:outputPanel id="lots">	
+		   <apex:pageBlockSection columns="1">
+		   		<apex:outputPanel rendered="{!wrappers.size>0}" id="lots">	
 					<apex:pageBlockTable var="item" value="{!wrappers}">
 						<apex:column headerValue="Units">
-							<apex:inputText value="{!item.units}"/>
+							<apex:inputText value="{!item.units}" required="true"/>
 						</apex:column>
 						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
 						<apex:column headerValue="Lot Number">{!item.product.name}</apex:column>
