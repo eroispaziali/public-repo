@@ -116,18 +116,21 @@ public with sharing class PobControllerExt {
 
 		// load all products in the page ...
 		if (isFilterEnabled()) {
+			System.debug('*** Filter is ON');
 			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
 				FROM Lot__c WHERE Product_Category__c = :categoryFilter
 				ORDER BY Name 
 				LIMIT :pageSize OFFSET :pageOffset];
 		} else {
+			System.debug('*** Filter is OFF');
 			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
 				FROM Lot__c 
 				ORDER BY Name 
 				LIMIT :pageSize OFFSET :pageOffset];
 		}
 		
-		// ... then get/create wrappers for all fetched products		
+		// ... then get/create wrappers for all fetched products
+		wrappers.clear();		
 		for (Lot__c l : lots) { 
 			Decimal units = quantityMap.get(l.id)!=null ? quantityMap.get(l.id) : 0;
 			Wrapper w = lot2Wrappers.get(l.id) !=null ? lot2Wrappers.get(l.id) : new Wrapper(l, units);

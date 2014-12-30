@@ -41,17 +41,16 @@
 			================================ -->			
 			<apex:pageBlockSection title="Product Lots" id="lots" columns="2">
 				<apex:pageBlockSectionItem >
-						  
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
 					<apex:actionRegion >
-						<apex:actionSupport action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" />
-			  			<apex:selectList size="1" id="filter" value="{!categoryFilter}">
+			  			<apex:selectList size="1" value="{!categoryFilter}">
+			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" />
 							<apex:selectOptions value="{!filterValues}"></apex:selectOptions>
 		      			</apex:selectList>
-			      		</apex:actionRegion>
+					</apex:actionRegion>
 		      	</apex:pageBlockSectionItem>
 		      	<apex:pageBlockSectionItem >
-		      		<apex:actionStatus id="loadingStatus" startText="Loading..." stopText="" />
+		      		<apex:actionStatus id="loadingStatus" startText="{!$Label.POB_Waiting}" stopText="" />
 		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
 		   
