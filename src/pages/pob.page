@@ -42,15 +42,15 @@
 			<apex:pageBlockSection title="Product Lots" id="lots" columns="2">
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
-					<apex:actionRegion >
 			  			<apex:selectList size="1" value="{!categoryFilter}">
-			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true"/>
+			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true">
+			  					<apex:param assignTo="{!categoryFilter}" value="{!categoryFilter}" name="categoryFilter"/>
+			  				</apex:actionSupport>
 							<apex:selectOptions value="{!filterValues}"/>
 		      			</apex:selectList>
-					</apex:actionRegion>
 		      	</apex:pageBlockSectionItem>
 		      	<apex:pageBlockSectionItem >
-		      		<apex:actionStatus id="loadingStatus" startText="{!$Label.POB_Waiting}" stopText="" />
+		      		<apex:actionStatus id="loadingStatus" startText="{!$Label.POB_Waiting}" stopText="Done." />
 		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
 		   
@@ -60,13 +60,19 @@
 		   		<apex:outputPanel rendered="{!wrappers.size>0}" id="lots">	
 					<apex:pageBlockTable var="item" value="{!wrappers}">
 						<apex:column headerValue="Units">
-							<apex:inputText value="{!item.units}" required="true"/>
+							<apex:inputText value="{!item.units}">
+								<apex:actionSupport event="onblur" action="{!toggleSelection}" status="loadingStatus" immediate="true">
+									<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
+									<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
+								</apex:actionSupport>
+							</apex:inputText>
 						</apex:column>
 						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
 						<apex:column headerValue="Lot Number">{!item.product.name}</apex:column>
 						<apex:column headerValue="Unit Price">{!item.product.Unit_Price__c}</apex:column>
 						<apex:column headerValue="Product Category">{!item.product.Product_Category__c}</apex:column>
 						<apex:column headerValue="Remaining Units">{!item.product.Remaining__c}</apex:column>
+						<apex:column headerValue="Check">{!item.createdTime}</apex:column>
 					</apex:pageBlockTable>
 				</apex:outputPanel>
 			</apex:pageBlockSection>

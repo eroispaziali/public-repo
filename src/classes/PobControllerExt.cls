@@ -2,9 +2,13 @@ public with sharing class PobControllerExt {
 	
 	// Summary, filter, etc
 	public String heading {get;set;}
-	public Integer units {get;set;}
-	public Decimal pricePerUnit {get;set;}
+	//public Integer units {get;set;}
+	//public Decimal pricePerUnit {get;set;}
 	public String categoryFilter {get;set;}
+	
+	// temp
+	public Id lotId {get;set;}
+	public String quantity {get;set;}
 	
 	// Records
 	public Order__c po {get;set;}
@@ -34,14 +38,14 @@ public with sharing class PobControllerExt {
 				WHERE Order__c = :po.Id
 			];
 			for (Line_Item__c li : lineItems) {
-				quantityMap.put(li.Id, li.Units__c);	
+				quantityMap.put(li.Lot__c, li.Units__c);	
 			}
 		} else {
 			// new PO
 			heading = Label.POB_Heading_New;
 		}
 		
-		resetFilter();
+		setFilter();
 	}
 	
 	/* Public methods
@@ -93,10 +97,33 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
-	public void resetFilter() {
-		categoryFilter = null;
-		updateRecordCount();
-		goToPage(1);
+	public void toggleSelection() {
+		System.debug('*** LOT: '+ lotId + ' QTY: ' + quantity);
+		if (lotId!=null && quantity!=null) {
+			quantityMap.put(lotId, Decimal.valueOf(quantity));
+			goToPage(currentPage);
+		} else {
+			System.debug('*** NOT SETTING SELECTION - VALUES ARE NULL');			
+		}
+	}
+	
+	public Decimal getUnits() {
+		Decimal totalUnits = 0;
+		for (Wrapper w : wrappers) {
+			totalUnits+=w.units;
+		}
+		System.debug('*** getting units... ' + totalUnits);
+		return totalUnits;
+	}
+	
+	public Decimal getPricePerUnit() {
+		Decimal totalCost = 0;
+		Decimal totalUnits = 0;
+		for (Wrapper w : wrappers) {
+			totalCost += w.product.Unit_Price__c * w.units; 
+			totalUnits+=w.units;
+		}
+		return (totalUnits!=0) ? totalCost/totalUnits : null;
 	}
 	
 	public void setFilter() {
@@ -108,6 +135,7 @@ public with sharing class PobControllerExt {
 	================================== */
 	
 	private void goToPage(Integer page) {
+		System.debug('*** GOTOPAGE: ' + page);
 		
 		// calculate offset
 		currentPage = (page >= 1) ? page : 1;
@@ -143,7 +171,9 @@ public with sharing class PobControllerExt {
 	}
 	
 	private boolean isFilterEnabled() {
-		return (categoryFilter!=null && categoryFilter!='');
+		Boolean isEnabled = (categoryFilter!=null && categoryFilter!='');
+		System.debug('*** IsFilterEnabled: ' + isEnabled);
+		return isEnabled;
 	}
 	
 	private void updateRecordCount() {
@@ -159,24 +189,29 @@ public with sharing class PobControllerExt {
 	
 	private boolean isEdit() {
 		return (po!=null && po.Id!=null) ? true : false;
-	} 
+	}
+	
+	 
 	
 	/* Inner classes
 	========================= */
 	
 	public class Wrapper {
 		
+		public Datetime createdTime {set;get;}
 		public Decimal units {set;get;}
 		public Lot__c product {set;get;}
 		
 		public Wrapper(Lot__c product) {
 			this.units = 0;
 			this.product = product;
+			createdTime = System.now();
 		}
 		
 		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;
 			this.product = product;
+			createdTime = System.now();
 		}
 	}
 	
