@@ -4,6 +4,7 @@
         <members>LineItemTriggerHandler</members>
         <members>LineItemTriggerTest</members>
         <members>PobControllerExt</members>
+        <members>PobControllerExtTest</members>
         <members>TestDataFactory</members>
         <name>ApexClass</name>
     </types>
