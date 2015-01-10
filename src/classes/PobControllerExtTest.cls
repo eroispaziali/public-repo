@@ -76,7 +76,7 @@ private class PobControllerExtTest {
     	Order__c myOrder = TestDataFactory.createOrder(myAccount);
     	insert myOrder;
     	
-    	    	// Create controllers
+		// Create controllers
     	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
     	PobControllerExt ce = new PobControllerExt(sc);
 

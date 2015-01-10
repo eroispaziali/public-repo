@@ -2,7 +2,11 @@ public with sharing class LineItemTriggerHandler {
 		
 	/* Public methods
 	========================= */
-			
+	
+	/** This handler methods is to be used on all relevant triggers events.
+		It updates purchased amount on orders and update top product categories.
+		It handles bulk 
+	*/		
 	public static void handle(List<Line_Item__c> items) {
 		
 		// collect related orders
