@@ -164,8 +164,8 @@ private class LineItemTriggerTest {
     	
 
 		/* ADDITIONAL
-		   Empty the order, ensure logic works 
-    	======================================== */
+		   Test with empty orders (no Line Items) 
+    	========================================== */
     	List<Line_Item__c> allMyOrderItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :myOrder.Id];
     	delete allMyOrderItems;
     	

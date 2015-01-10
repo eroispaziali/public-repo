@@ -98,6 +98,7 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void toggleSelection() {
+		//lotId = Apex
 		System.debug('*** LOT: '+ lotId + ' QTY: ' + quantity);
 		if (lotId!=null && quantity!=null) {
 			quantityMap.put(lotId, Decimal.valueOf(quantity));
@@ -172,7 +173,7 @@ public with sharing class PobControllerExt {
 	
 	private boolean isFilterEnabled() {
 		Boolean isEnabled = (categoryFilter!=null && categoryFilter!='');
-		System.debug('*** IsFilterEnabled: ' + isEnabled);
+		System.debug('*** IsFilterEnabled: ' + isEnabled + ' value=' + categoryFilter) ;
 		return isEnabled;
 	}
 	
