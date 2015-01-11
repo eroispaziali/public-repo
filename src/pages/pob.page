@@ -1,9 +1,7 @@
+<!-- Purchase Order Builder (POB) -->
+
 <apex:page standardController="Order__c" extensions="PobControllerExt">
-	
-	<!-- Error messages
-	============================= -->
 	<apex:pageMessages />
-	
 	<apex:sectionHeader title="{!$Label.POB_Title}" subtitle="{!heading}"/>
 	<apex:form >
 		<apex:pageBlock title="{!$Label.POB_Title}" mode="edit">
@@ -20,7 +18,7 @@
 			<apex:pageBlockSection title="Details" columns="2" id="details">
 				<apex:inputField value="{!Order__c.Name}" required="true" />
 				<apex:inputField value="{!Order__c.Status__c}" required="true" />
-				<apex:inputField value="{!Order__c.Budget__c}" required="true" />
+				<apex:inputField value="{!Order__c.Budget__c}" required="true"  />
 				<apex:inputField value="{!Order__c.Store__c}" required="true" />
 			</apex:pageBlockSection>
 			
@@ -33,7 +31,9 @@
 				</apex:pageBlockSectionItem>
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_PricePerUnit}"/>
-					<apex:outputText value="{!pricePerUnit}"/>
+					<apex:outputText value="${0,number,###,###,##0.00}" rendered="{!pricePerUnit!=null}">
+						<apex:param value="{!pricePerUnit}"/>
+					</apex:outputText>
 				</apex:pageBlockSectionItem>
 			</apex:pageBlockSection>
 
@@ -43,7 +43,7 @@
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
 			  			<apex:selectList size="1" value="{!categoryFilter}">
-			  				<apex:actionSupport event="onchange" action="{!setFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true">
+			  				<apex:actionSupport event="onchange" action="{!updateFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true">
 			  					<apex:param assignTo="{!categoryFilter}" value="{!categoryFilter}" name="categoryFilter"/>
 			  				</apex:actionSupport>
 							<apex:selectOptions value="{!filterValues}"/>
@@ -60,19 +60,28 @@
 		   		<apex:outputPanel rendered="{!wrappers.size>0}" id="lots">	
 					<apex:pageBlockTable var="item" value="{!wrappers}">
 						<apex:column headerValue="Units">
-							<apex:inputText value="{!item.units}">
-								<apex:actionSupport event="onblur" action="{!toggleSelection}" status="loadingStatus" immediate="true">
+							<apex:inputText value="{!item.units}" required="true">
+								<apex:actionSupport event="onchange" action="{!toggleSelection}" status="loadingStatus" immediate="true">
 									<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
 									<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
 								</apex:actionSupport>
 							</apex:inputText>
 						</apex:column>
 						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
-						<apex:column headerValue="Lot Number">{!item.product.name}</apex:column>
-						<apex:column headerValue="Unit Price">{!item.product.Unit_Price__c}</apex:column>
+						<apex:column headerValue="Lot Number">
+							<apex:outputLink value="/{!item.product.id}">{!item.product.name}</apex:outputLink>
+						</apex:column>
+						<apex:column headerValue="Unit Price">
+							<apex:outputText value="${0,number,###,###,##0.00}">
+							  <apex:param value="{!item.product.Unit_Price__c}"/>
+							</apex:outputText>
+						</apex:column>
 						<apex:column headerValue="Product Category">{!item.product.Product_Category__c}</apex:column>
-						<apex:column headerValue="Remaining Units">{!item.product.Remaining__c}</apex:column>
-						<apex:column headerValue="Check">{!item.createdTime}</apex:column>
+						<apex:column headerValue="Remaining Units">
+							<apex:outputText value="{0,number,###,###,##0}">
+								<apex:param value="{!item.product.Remaining__c}"/>
+							</apex:outputText>
+						</apex:column>
 					</apex:pageBlockTable>
 				</apex:outputPanel>
 			</apex:pageBlockSection>
@@ -81,14 +90,14 @@
 		   ============================= -->
 			<apex:pageBlockSection id="pagination">
 				<apex:panelGrid columns="5">
-					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}"/>
-					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}"/>
+					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}" immediate="true"/>
+					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}" immediate="true"/>
 					<apex:outputText value="{!$Label.POB_Page}">
 						<apex:param value="{!currentPage}"/>
 		      			<apex:param value="{!numberOfPages}"/>
 					</apex:outputText>
-					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}"/>
-					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}"/>
+					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}" immediate="true"/>
+					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}" immediate="true"/>
 				</apex:panelGrid>
 			</apex:pageBlockSection>
    		</apex:pageBlock>

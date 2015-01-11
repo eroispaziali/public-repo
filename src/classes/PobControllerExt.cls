@@ -1,51 +1,42 @@
 public with sharing class PobControllerExt {
-	
-	// Summary, filter, etc
+
+	// Summary, filter, etc	
 	public String heading {get;set;}
-	//public Integer units {get;set;}
-	//public Decimal pricePerUnit {get;set;}
 	public String categoryFilter {get;set;}
+	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name ';
+	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
 	
 	// temp
-	public Id lotId {get;set;}
-	public String quantity {get;set;}
+	public transient Id lotId {get;set;}
+	public transient String quantity {get;set;}
 	
 	// Records
 	public Order__c po {get;set;}
 	public List<Wrapper> wrappers {get;set;}
 	
 	// Private stuff
-	private List<Lot__c> lots;
-	private Map<Id, Wrapper> lot2Wrappers = new Map<Id, Wrapper>();
+	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
 	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>(); 
-	private Integer currentPage;
-	private Integer pageOffset;
-	private Integer pageSize = 5;
-	private Integer totalPages;
-	private Integer recordCount;
+	
+	@TestVisible 
+	private ApexPages.StandardSetController setCtrl;
 	
 	// Constructor
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		po = (Order__c) stdController.getRecord();
-		wrappers = new List<Wrapper>();
-		
-		if (isEdit()) {
-			// existing PO
+		//wrappers = new List<Wrapper>();
+		if (isEditingExistingOrder()) {
 			heading = po.Name;
-			List<Line_Item__c> lineItems = [
-				SELECT Units__c, Lot__c, Amount__c 
-				FROM Line_Item__c 
-				WHERE Order__c = :po.Id
-			];
-			for (Line_Item__c li : lineItems) {
+			List<Line_Item__c> existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
+			for (Line_Item__c li : existingLineItems) {
 				quantityMap.put(li.Lot__c, li.Units__c);	
 			}
 		} else {
-			// new PO
+			// On a new Purchase Order
 			heading = Label.POB_Heading_New;
 		}
 		
-		setFilter();
+		resetFilter();
 	}
 	
 	/* Public methods
@@ -62,38 +53,44 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void firstPage() {
-		goToPage(1);
+		setCtrl.first();
+		refreshWrappers();
 	}
 	
 	public void lastPage() { 
-		goToPage(totalPages);
+		setCtrl.last();
+		refreshWrappers();
 	}
 	
 	public boolean getPrevDisabled() {
-		return (currentPage > 1) ? false : true;
+		return !setCtrl.getHasPrevious();
 	}
 	
 	public boolean getNextDisabled() {
-		return (currentPage<totalPages) ? false : true;
+		return !setCtrl.getHasNext();
 	}
 	
 	public Integer getNumberOfPages() {
-		return totalPages;
+		Integer recordCount = setCtrl.getResultSize();
+		Integer pageSize = setCtrl.getPageSize();
+		return recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
 	}
 	
 	public Integer getCurrentPage() {
-		return currentPage;
+		return setCtrl.getPageNumber();
 	}
 	
 	public void nextPage() {
-		if (!getNextDisabled()) {
-			goToPage(currentPage+1);
+		if (setCtrl.getHasNext()) {
+			setCtrl.next();
+			refreshWrappers();
 		}
 	}
 	
 	public void prevPage() {
-		if (!getPrevDisabled()) {
-			goToPage(currentPage-1);
+		if (setCtrl.getHasPrevious()) {
+			setCtrl.previous();
+			refreshWrappers();
 		}
 	}
 	
@@ -102,7 +99,7 @@ public with sharing class PobControllerExt {
 		System.debug('*** LOT: '+ lotId + ' QTY: ' + quantity);
 		if (lotId!=null && quantity!=null) {
 			quantityMap.put(lotId, Decimal.valueOf(quantity));
-			goToPage(currentPage);
+			refreshWrappers();
 		} else {
 			System.debug('*** NOT SETTING SELECTION - VALUES ARE NULL');			
 		}
@@ -110,65 +107,49 @@ public with sharing class PobControllerExt {
 	
 	public Decimal getUnits() {
 		Decimal totalUnits = 0;
-		for (Wrapper w : wrappers) {
+		for (Wrapper w : wrappersMap.values()) {
 			totalUnits+=w.units;
 		}
-		System.debug('*** getting units... ' + totalUnits);
 		return totalUnits;
 	}
 	
 	public Decimal getPricePerUnit() {
 		Decimal totalCost = 0;
 		Decimal totalUnits = 0;
-		for (Wrapper w : wrappers) {
+		for (Wrapper w : wrappersMap.values()) {
 			totalCost += w.product.Unit_Price__c * w.units; 
 			totalUnits+=w.units;
 		}
 		return (totalUnits!=0) ? totalCost/totalUnits : null;
 	}
 	
-	public void setFilter() {
-		goToPage(1);
-		updateRecordCount();
+	public void resetFilter() {
+		categoryFilter = '';
+		updateFilter();
 	}
+	
+	public void updateFilter() {
+		String soql = (isFilterEnabled()) ? SOQL_WITH_FILTER : SOQL_WITHOUT_FILTER;
+		setCtrl = new ApexPages.StandardSetController(Database.getQueryLocator(soql));
+		setCtrl.setPageSize(5);
+		//setCtrl.setFilterId(categoryFilter);
+		System.debug('*** Filter is being updated. IsEnabled: ' + isFilterEnabled());
+		refreshWrappers();
+	}
+	
 	
 	/* Utility methods (not exposed)
 	================================== */
 	
-	private void goToPage(Integer page) {
-		System.debug('*** GOTOPAGE: ' + page);
-		
-		// calculate offset
-		currentPage = (page >= 1) ? page : 1;
-		pageOffset = (page-1) * pageSize;
-		pageOffset = (pageOffset!=null && pageOffset>=0) ? pageOffset : 0;
-
-		// load all products in the page ...
-		if (isFilterEnabled()) {
-			System.debug('*** Filter is ON');
-			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
-				FROM Lot__c WHERE Product_Category__c = :categoryFilter
-				ORDER BY Name 
-				LIMIT :pageSize OFFSET :pageOffset];
-		} else {
-			System.debug('*** Filter is OFF');
-			lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c 
-				FROM Lot__c 
-				ORDER BY Name 
-				LIMIT :pageSize OFFSET :pageOffset];
-		}
-		
-		// ... then get/create wrappers for all fetched products
-		wrappers.clear();
-		System.debug('*** Wrappers are ' + wrappers.size());		
+	private void refreshWrappers() {
+		wrappers = new List<Wrapper>();
+		List<Lot__c> lots = setCtrl.getRecords();
 		for (Lot__c l : lots) { 
 			Decimal units = quantityMap.get(l.id)!=null ? quantityMap.get(l.id) : 0;
-			Wrapper w = lot2Wrappers.get(l.id) !=null ? lot2Wrappers.get(l.id) : new Wrapper(l, units);
+			Wrapper w = wrappersMap.get(l.id) !=null ? wrappersMap.get(l.id) : new Wrapper(l, units);
 			wrappers.add(w);
-			lot2Wrappers.put(l.id, w);
+			wrappersMap.put(l.id, w);
 		}
-		System.debug('*** Wrappers are ' + wrappers.size());
-		
 	}
 	
 	private boolean isFilterEnabled() {
@@ -177,22 +158,9 @@ public with sharing class PobControllerExt {
 		return isEnabled;
 	}
 	
-	private void updateRecordCount() {
-		List<AggregateResult> ar;
-		if (isFilterEnabled()) {
-			ar = [SELECT COUNT(Id) c FROM Lot__c WHERE Product_Category__c = :categoryFilter];
-		} else {
-			ar = [SELECT COUNT(Id) c FROM Lot__c];			
-		}
-		recordCount = (ar.size()>0) ? (Integer) ar.get(0).get('c') : null;
-		totalPages = recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
-	}
-	
-	private boolean isEdit() {
+	private boolean isEditingExistingOrder() {
 		return (po!=null && po.Id!=null) ? true : false;
 	}
-	
-	 
 	
 	/* Inner classes
 	========================= */
@@ -206,13 +174,11 @@ public with sharing class PobControllerExt {
 		public Wrapper(Lot__c product) {
 			this.units = 0;
 			this.product = product;
-			createdTime = System.now();
 		}
 		
 		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;
 			this.product = product;
-			createdTime = System.now();
 		}
 	}
 	
