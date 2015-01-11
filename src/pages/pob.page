@@ -1,4 +1,5 @@
-<!-- Purchase Order Builder (POB) -->
+<!-- Purchase Order Builder
+============================= -->
 
 <apex:page standardController="Order__c" extensions="PobControllerExt">
 	<apex:pageMessages />
@@ -21,13 +22,15 @@
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$ObjectType.Order__c.fields.Budget__c.Label}"/>
 					<apex:outputPanel >
-						<!-- New orders or drafts -->
-						<apex:inputField value="{!Order__c.Budget__c}" required="true" rendered="{!Order__c.id==null || Order__c.Status__c=='Draft'}"/>
+					
+						<!-- New orders and order drafts have modifiable budget -->
+						<apex:inputField value="{!Order__c.Budget__c}" required="true" rendered="{!Order__c.Id==null || Order__c.Status__c=='Draft'}"/>
 						
-						<!-- Open or closed orders -->
+						<!-- Open or closed orders have read-only budget -->
 						<apex:outputText value="${0,number,###,###,##0}" rendered="{!Order__c.Status__c=='Open' || Order__c.Status__c=='Closed'}">
 							<apex:param value="{!Order__c.Budget__c}"/>
 						</apex:outputText>
+						
 					</apex:outputPanel>
 				</apex:pageBlockSectionItem>
 				<apex:inputField value="{!Order__c.Store__c}" required="true" />
@@ -71,26 +74,48 @@
 		   <apex:pageBlockSection columns="1">
 		   		<apex:outputPanel id="table">	
 					<apex:pageBlockTable var="item" value="{!wrappers}" rendered="{!wrappers.size>0}">
+					
+						<!-- Units -->
 						<apex:column headerValue="Units">
-							<apex:actionRegion >
-								<apex:inputText value="{!item.units}" required="true">
-									<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table">
-										<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
-										<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
-									</apex:actionSupport>
-								</apex:inputText>
-							</apex:actionRegion>
+							
+							<!-- On closed orders units are read only... -->
+							<apex:outputPanel rendered="{!Order__c.Status__c=='Closed'}">
+								{!item.units}
+							</apex:outputPanel>
+							
+							<!-- ...while units on other orders can be edited -->
+							<apex:outputPanel rendered="{!Order__c.Status__c!='Closed'}">
+								<apex:actionRegion >
+									<apex:inputText value="{!item.units}" required="true">
+										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table">
+											<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
+											<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
+										</apex:actionSupport>
+									</apex:inputText>
+								</apex:actionRegion>
+							</apex:outputPanel>
+							
 						</apex:column>
+						
+						<!-- Product name -->
 						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
+						
+						<!-- Lot number -->
 						<apex:column headerValue="Lot Number">
-							<apex:outputLink value="/{!item.product.id}">{!item.product.name}</apex:outputLink>
+							<apex:outputLink value="/{!item.product.id}" target="_blank">{!item.product.name}</apex:outputLink>
 						</apex:column>
+						
+						<!-- Unit Price -->
 						<apex:column headerValue="Unit Price">
 							<apex:outputText value="${0,number,###,###,##0.00}">
 							  <apex:param value="{!item.product.Unit_Price__c}"/>
 							</apex:outputText>
 						</apex:column>
+						
+						<!-- Product Category -->
 						<apex:column headerValue="Product Category">{!item.product.Product_Category__c}</apex:column>
+						
+						<!-- Remaining Units -->
 						<apex:column headerValue="Remaining Units">
 							<apex:outputText value="{0,number,###,###,##0}">
 								<apex:param value="{!item.product.Remaining__c}"/>
@@ -98,10 +123,10 @@
 						</apex:column>
 					</apex:pageBlockTable>
 					
+					<!-- A message is displayed when no lots are found -->					
 					<apex:outputPanel rendered="{!wrappers.size==0}">
 						<apex:outputText value="{!$Label.POB_No_Products}"/>
 					</apex:outputPanel>
-					
 					
 				</apex:outputPanel>
 			</apex:pageBlockSection>
@@ -110,14 +135,14 @@
 		   ============================= -->
 			<apex:pageBlockSection id="pagination">
 				<apex:panelGrid columns="5" rendered="{!wrappers.size>0}">
-					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}" immediate="true"/>
-					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}" immediate="true"/>
+					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}" immediate="true" reRender="summary, pagination, table" status="loadingStatus"/>
+					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}" immediate="true" reRender="summary, pagination, table" status="loadingStatus"/>
 					<apex:outputText value="{!$Label.POB_Page}">
 						<apex:param value="{!currentPage}"/>
 		      			<apex:param value="{!numberOfPages}"/>
 					</apex:outputText>
-					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}" immediate="true"/>
-					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}" immediate="true"/>
+					<apex:commandButton action="{!nextPage}" value="{!$Label.POB_Next}" disabled="{!nextDisabled}" immediate="true" reRender="summary, pagination, table" status="loadingStatus"/>
+					<apex:commandButton action="{!lastPage}" value="{!$Label.POB_Last}" disabled="{!nextDisabled}" immediate="true" reRender="summary, pagination, table" status="loadingStatus"/>
 				</apex:panelGrid>
 			</apex:pageBlockSection>
    		</apex:pageBlock>

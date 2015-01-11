@@ -3,7 +3,7 @@ public with sharing class PobControllerExt {
 	// Summary, filter, etc	
 	public String heading {get;set;}
 	public String categoryFilter {get;set;}
-	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name ';
+	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name';
 	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
 	
 	// temp
@@ -22,11 +22,9 @@ public with sharing class PobControllerExt {
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
 	
-	// Constructor
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		stdCtrl = stdController;
 		po = (Order__c) stdCtrl.getRecord();
-		//wrappers = new List<Wrapper>();
 		if (isEditingExistingOrder()) {
 			heading = po.Name;
 			List<Line_Item__c> existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
@@ -193,7 +191,7 @@ public with sharing class PobControllerExt {
 	
 	private boolean isFilterEnabled() {
 		Boolean isEnabled = (categoryFilter!=null && categoryFilter!='');
-		System.debug('*** IsFilterEnabled: ' + isEnabled + ' value=' + categoryFilter) ;
+		System.debug('*** IsFilterEnabled: ' + isEnabled + ', Value is: ' + categoryFilter) ;
 		return isEnabled;
 	}
 	
@@ -206,7 +204,6 @@ public with sharing class PobControllerExt {
 	
 	public class Wrapper {
 		
-		public Datetime createdTime {set;get;}
 		public Decimal units {set;get;}
 		public Lot__c product {set;get;}
 		

@@ -22,6 +22,11 @@
 @isTest
 private class PobControllerExtTest {
 
+	static testMethod void testFilter() {
+		// should work
+		// products should be in alphabetical order
+	}
+
     static testMethod void testPaginationNoProducts() {
 		
 		// Prepare data
@@ -42,7 +47,7 @@ private class PobControllerExtTest {
     	
     }
     
-    static testMethod void testNew() {
+    static testMethod void testCreateNewOrder() {
     	
     	// create lots (3x pages, 5,5,2 elements)
     	List<Lot__c> lots = TestDataFactory.createLots(12);
@@ -65,7 +70,7 @@ private class PobControllerExtTest {
         
     }
     
-    static testMethod void testEdit() {
+    static testMethod void testEditExistingOrder() {
     	// create lots (3x pages, 5,5,2 elements)
     	List<Lot__c> lots = TestDataFactory.createLots(12);
     	insert lots;
