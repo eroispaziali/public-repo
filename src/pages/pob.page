@@ -72,12 +72,14 @@
 		   		<apex:outputPanel id="table">	
 					<apex:pageBlockTable var="item" value="{!wrappers}" rendered="{!wrappers.size>0}">
 						<apex:column headerValue="Units">
-							<apex:inputText value="{!item.units}" required="true">
-								<apex:actionSupport event="onchange" action="{!toggleSelection}" status="loadingStatus" immediate="true">
-									<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
-									<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
-								</apex:actionSupport>
-							</apex:inputText>
+							<apex:actionRegion >
+								<apex:inputText value="{!item.units}" required="true">
+									<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table">
+										<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
+										<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
+									</apex:actionSupport>
+								</apex:inputText>
+							</apex:actionRegion>
 						</apex:column>
 						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
 						<apex:column headerValue="Lot Number">

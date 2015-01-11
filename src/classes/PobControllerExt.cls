@@ -7,8 +7,8 @@ public with sharing class PobControllerExt {
 	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
 	
 	// temp
-	public transient Id lotId {get;set;}
-	public transient String quantity {get;set;}
+	public Id lotId {get;set;}
+	public String quantity {get;set;}
 	
 	// Records
 	public Order__c po {get;set;}
@@ -20,10 +20,12 @@ public with sharing class PobControllerExt {
 	
 	@TestVisible 
 	private ApexPages.StandardSetController setCtrl;
+	private ApexPages.StandardController stdCtrl;
 	
 	// Constructor
 	public PobControllerExt(ApexPages.StandardController stdController) {
-		po = (Order__c) stdController.getRecord();
+		stdCtrl = stdController;
+		po = (Order__c) stdCtrl.getRecord();
 		//wrappers = new List<Wrapper>();
 		if (isEditingExistingOrder()) {
 			heading = po.Name;
@@ -95,8 +97,9 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
-	public void toggleSelection() {
-		//lotId = Apex
+	public void updateSelection() {
+		//lotId = Apexpages.currentPage().getParameters().get('lot');
+		//quantity = Apexpages.currentPage().getParameters().get('qty');
 		System.debug('*** LOT: '+ lotId + ' QTY: ' + quantity);
 		if (lotId!=null && quantity!=null) {
 			quantityMap.put(lotId, Decimal.valueOf(quantity));
@@ -104,6 +107,8 @@ public with sharing class PobControllerExt {
 		} else {
 			System.debug('*** NOT SETTING SELECTION - VALUES ARE NULL');			
 		}
+		System.debug('*** QuantityMap');
+		System.debug(quantityMap);
 	}
 	
 	public Decimal getUnits() {
@@ -137,6 +142,43 @@ public with sharing class PobControllerExt {
 		refreshWrappers();
 	}
 	
+	public boolean validate() {
+		return true;
+	}
+	
+	public PageReference save() {
+		System.debug('*** Order data is ' + po);
+		if (validate()) {
+			Savepoint sp = Database.setSavepoint();
+			try {
+				upsert po;
+				PageReference saveResult = stdCtrl.save();
+				
+				List<Line_Item__c> lineItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :po.Id];
+				if (lineItems!=null && lineItems.size()>0) {
+					delete lineItems;
+				}
+				lineItems = new List<Line_Item__c>();
+				for (Wrapper w : wrappersMap.values()) {
+					if (w.units > 0) {
+						Line_Item__c li = w.toLineItem();
+						li.Order__c = po.Id;
+						lineItems.add(li);
+					}					
+				}
+				insert lineItems;
+				System.debug('*** Save successful ***');
+				return saveResult;
+			} catch (Exception e) {
+				System.debug('*** Something went wrong while saving. Rolling back transaction. ***');
+				Database.rollback(sp);
+				ApexPages.addMessages(e);
+				return stdCtrl.cancel();
+			}
+		}
+		System.debug('*** Trip validation failed, such a shame ***');
+		return null;
+	}
 	
 	/* Utility methods (not exposed)
 	================================== */
@@ -179,6 +221,13 @@ public with sharing class PobControllerExt {
 		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;
 			this.product = product;
+		}
+		
+		public Line_Item__c toLineItem() {
+			Line_Item__c li = new Line_Item__c();
+			li.Units__c = units;
+			li.Lot__c = product.Id;
+			return li;
 		}
 	}
 	
