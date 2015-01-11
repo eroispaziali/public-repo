@@ -18,7 +18,18 @@
 			<apex:pageBlockSection title="Details" columns="2" id="details">
 				<apex:inputField value="{!Order__c.Name}" required="true" />
 				<apex:inputField value="{!Order__c.Status__c}" required="true" />
-				<apex:inputField value="{!Order__c.Budget__c}" required="true"  />
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="{!$ObjectType.Order__c.fields.Budget__c.Label}"/>
+					<apex:outputPanel >
+						<!-- New orders or drafts -->
+						<apex:inputField value="{!Order__c.Budget__c}" required="true" rendered="{!Order__c.id==null || Order__c.Status__c=='Draft'}"/>
+						
+						<!-- Open or closed orders -->
+						<apex:outputText value="${0,number,###,###,##0}" rendered="{!Order__c.Status__c=='Open' || Order__c.Status__c=='Closed'}">
+							<apex:param value="{!Order__c.Budget__c}"/>
+						</apex:outputText>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
 				<apex:inputField value="{!Order__c.Store__c}" required="true" />
 			</apex:pageBlockSection>
 			
