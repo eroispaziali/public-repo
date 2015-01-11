@@ -98,17 +98,12 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void updateSelection() {
-		//lotId = Apexpages.currentPage().getParameters().get('lot');
-		//quantity = Apexpages.currentPage().getParameters().get('qty');
-		System.debug('*** LOT: '+ lotId + ' QTY: ' + quantity);
 		if (lotId!=null && quantity!=null) {
 			quantityMap.put(lotId, Decimal.valueOf(quantity));
 			refreshWrappers();
 		} else {
-			System.debug('*** NOT SETTING SELECTION - VALUES ARE NULL');			
+			System.debug('*** Selection NOT updated');			
 		}
-		System.debug('*** QuantityMap');
-		System.debug(quantityMap);
 	}
 	
 	public Decimal getUnits() {
@@ -147,17 +142,19 @@ public with sharing class PobControllerExt {
 	}
 	
 	public PageReference save() {
-		System.debug('*** Order data is ' + po);
 		if (validate()) {
 			Savepoint sp = Database.setSavepoint();
 			try {
 				upsert po;
 				PageReference saveResult = stdCtrl.save();
 				
+				// delete existing line items (if any)
 				List<Line_Item__c> lineItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :po.Id];
 				if (lineItems!=null && lineItems.size()>0) {
 					delete lineItems;
 				}
+				
+				// create & insert new line items
 				lineItems = new List<Line_Item__c>();
 				for (Wrapper w : wrappersMap.values()) {
 					if (w.units > 0) {
@@ -170,13 +167,13 @@ public with sharing class PobControllerExt {
 				System.debug('*** Save successful ***');
 				return saveResult;
 			} catch (Exception e) {
-				System.debug('*** Something went wrong while saving. Rolling back transaction. ***');
+				// In case of error rollback and stay on the same page (display errors)
 				Database.rollback(sp);
 				ApexPages.addMessages(e);
-				return stdCtrl.cancel();
+				return null;
 			}
 		}
-		System.debug('*** Trip validation failed, such a shame ***');
+		System.debug('*** Validation failed ***');
 		return null;
 	}
 	
