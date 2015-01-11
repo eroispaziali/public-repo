@@ -5,8 +5,7 @@ public with sharing class LineItemTriggerHandler {
 	
 	/** This handler methods is to be used on all relevant triggers events.
 		It updates purchased amount on orders and update top product categories.
-		It handles bulk 
-	*/		
+		Logic is fully bulkified. */		
 	public static void handle(List<Line_Item__c> items) {
 		
 		// collect related orders
@@ -71,6 +70,7 @@ public with sharing class LineItemTriggerHandler {
 			this.units += units;
 		}
 		
+		// override compareTo methods to leverage sortable collections
 		public Integer compareTo(Object compareTo) {
 			CategoryWrapper wrapped = (CategoryWrapper) compareTo;
 			if (units>wrapped.units) return -1;

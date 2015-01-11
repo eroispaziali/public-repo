@@ -56,11 +56,37 @@ private class LineItemTriggerTest {
 		List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, someLots, 1);
 		
 		Test.startTest();
-		insert largeBulk;
-		System.assert(Limits.getLimitCpuTime()>=0, 'Large Volumes Issue - CPU time');
-		System.assert(Limits.getLimitDMLStatements()>=0, 'Large Volumes Issue - DML statements');
-		System.assert(Limits.getLimitHeapSize()>=0, 'Large Volumes Issue - Heap size');
+			insert largeBulk;
+			System.assert(Limits.getLimitCpuTime()>=0, 'Large Volumes Issue - CPU time');
+			System.assert(Limits.getLimitDMLStatements()>=0, 'Large Volumes Issue - DML statements');
+			System.assert(Limits.getLimitHeapSize()>=0, 'Large Volumes Issue - Heap size');
 		Test.stopTest();
+	}
+	
+	@IsTest(seeAllData=false)
+	private static void testOrphanLineItems() {
+		Account myStore = TestDataFactory.createAccount();
+		Account anotherStore = TestDataFactory.createAccount();
+		insert new List<Account> { myStore, anotherStore };
+		
+		Lot__c apples = TestDataFactory.createLot('apples', TEST_PRICE_APPLES);
+    	Lot__c pears = TestDataFactory.createLot('pears', TEST_PRICE_PEARS);
+    	Lot__c oranges = TestDataFactory.createLot('oranges', TEST_PRICE_ORANGES);
+    	List<Lot__c> lots = new List<Lot__c> { pears, oranges, apples }; 
+    	insert lots;
+    	
+    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
+    	Line_Item__c myApples = TestDataFactory.createLineItem(apples, 10);
+    	Line_Item__c myOranges = TestDataFactory.createLineItem(oranges, 9);
+    	Line_Item__c myPears = TestDataFactory.createLineItem(pears, 6);
+    	 
+    	lineItems.add( myOranges );
+    	lineItems.add( myApples );
+    	lineItems.add( myPears );
+    	
+    	insert lineItems;
+    	
+    	
 	}
 	
 	@IsTest(seeAllData=false)

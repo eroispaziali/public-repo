@@ -39,6 +39,10 @@ public class TestDataFactory {
 		return createLineItems(new List<Order__c>{anOrder}, new List<Lot__c>{lot}, units).get(0);
 	}
 	
+	public static Line_Item__c createLineItem(Lot__c lot, Integer units) {
+		return createLineItems(new List<Lot__c>{lot}, units).get(0);
+	}
+	
 	public static List<Line_Item__c> createLineItems(List<Order__c> orders, List<Lot__c> lots, Integer units) {
 		List<Line_Item__c> lineItems = new List<Line_Item__c>();
 		for (Order__c o : orders) {
@@ -50,6 +54,18 @@ public class TestDataFactory {
 				);
 				lineItems.add(lineItem);
 			}
+		}
+		return lineItems;
+	}
+	
+	public static List<Line_Item__c> createLineItems(List<Lot__c> lots, Integer units) {
+		List<Line_Item__c> lineItems = new List<Line_Item__c>();
+		for (Lot__c l : lots) {
+			Line_Item__c lineItem = new Line_Item__c(
+				Lot__c = l.Id,
+				Units__c = units
+			);
+			lineItems.add(lineItem);
 		}
 		return lineItems;
 	}
@@ -80,6 +96,15 @@ public class TestDataFactory {
 		);
 		return li; 
 	}
+	
+	public static Line_Item__c createLineItem(Id lotId, Integer units) {
+		Line_Item__c li = new Line_Item__c(
+			Lot__c = lotId,
+			Units__c = units
+		);
+		return li; 
+	}
+	
 	
 	// in use
 	public static Lot__c createLot(String productCategory, Decimal unitPrice) {
