@@ -53,7 +53,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Lots</shortDescription>
+        <shortDescription>Section header</shortDescription>
         <value>Product Lots</value>
     </labels>
     <labels>
@@ -78,7 +78,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>POB_No_Products</shortDescription>
-        <value>Sorry, no products found.</value>
+        <value>Sorry, no product lots found.</value>
     </labels>
     <labels>
         <fullName>POB_Page</fullName>
@@ -117,7 +117,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Summary</shortDescription>
+        <shortDescription>Summary section header</shortDescription>
         <value>Summary</value>
     </labels>
     <labels>
@@ -125,7 +125,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Title</shortDescription>
+        <shortDescription>Page title for Purchase Order Builder</shortDescription>
         <value>Purchase Order Builder</value>
     </labels>
     <labels>
@@ -141,7 +141,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Waiting</shortDescription>
+        <shortDescription>Waiting status when summary is being updated</shortDescription>
         <value>Updating Summary...</value>
     </labels>
     <labels>
@@ -149,7 +149,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Waiting_Filter</shortDescription>
+        <shortDescription>Waiting status when filter is being updated</shortDescription>
         <value>Updating Category Filter...</value>
     </labels>
 </CustomLabels>
