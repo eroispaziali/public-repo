@@ -50,26 +50,27 @@
 
 			<!-- Filter & load indicator
 			================================ -->			
-			<apex:pageBlockSection title="Product Lots" id="lots" columns="2">
+			<apex:pageBlockSection title="Product Lots" columns="2">
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
-			  			<apex:selectList size="1" value="{!categoryFilter}">
-			  				<apex:actionSupport event="onchange" action="{!updateFilter}" reRender="lots, pagination" status="loadingStatus" immediate="true">
-			  					<apex:param assignTo="{!categoryFilter}" value="{!categoryFilter}" name="categoryFilter"/>
-			  				</apex:actionSupport>
-							<apex:selectOptions value="{!filterValues}"/>
-		      			</apex:selectList>
+						<apex:actionRegion >
+							<apex:actionFunction name="jsFilter" action="{!updateFilter}" reRender="table, pagination" status="filterStatus" />
+				  			<apex:selectList size="1" value="{!categoryFilter}" onchange="jsFilter();">
+								<apex:selectOptions value="{!filterValues}"/>
+			      			</apex:selectList>
+			      		</apex:actionRegion>
 		      	</apex:pageBlockSectionItem>
 		      	<apex:pageBlockSectionItem >
-		      		<apex:actionStatus id="loadingStatus" startText="{!$Label.POB_Waiting}" stopText="Done." />
+		      		<apex:actionStatus id="loadingStatus" startText="{!$Label.POB_Waiting}" />
+		      		<apex:actionStatus id="filterStatus" startText="{!$Label.POB_Waiting_Filter}" />
 		      	</apex:pageBlockSectionItem>
 		   </apex:pageBlockSection>
 		   
 		   <!-- Product Lots Table
 		   ============================= -->
 		   <apex:pageBlockSection columns="1">
-		   		<apex:outputPanel rendered="{!wrappers.size>0}" id="lots">	
-					<apex:pageBlockTable var="item" value="{!wrappers}">
+		   		<apex:outputPanel id="table">	
+					<apex:pageBlockTable var="item" value="{!wrappers}" rendered="{!wrappers.size>0}">
 						<apex:column headerValue="Units">
 							<apex:inputText value="{!item.units}" required="true">
 								<apex:actionSupport event="onchange" action="{!toggleSelection}" status="loadingStatus" immediate="true">
@@ -94,13 +95,19 @@
 							</apex:outputText>
 						</apex:column>
 					</apex:pageBlockTable>
+					
+					<apex:outputPanel rendered="{!wrappers.size==0}">
+						<apex:outputText value="No products found"/>
+					</apex:outputPanel>
+					
+					
 				</apex:outputPanel>
 			</apex:pageBlockSection>
 			
 		   <!-- Pagination
 		   ============================= -->
 			<apex:pageBlockSection id="pagination">
-				<apex:panelGrid columns="5">
+				<apex:panelGrid columns="5" rendered="{!wrappers.size>0}">
 					<apex:commandButton action="{!firstPage}" value="{!$Label.POB_First}" disabled="{!prevDisabled}" immediate="true"/>
 					<apex:commandButton action="{!prevPage}" value="{!$Label.POB_Prev}" disabled="{!prevDisabled}" immediate="true"/>
 					<apex:outputText value="{!$Label.POB_Page}">
