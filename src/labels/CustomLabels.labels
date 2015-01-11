@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>POB_Cancel</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
         <fullName>POB_Details</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Details</shortDescription>
+        <shortDescription>Label for details section header</shortDescription>
         <value>Details</value>
     </labels>
     <labels>
@@ -13,7 +21,7 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Filter</shortDescription>
+        <shortDescription>Label for product category filter</shortDescription>
         <value>Category Filter</value>
     </labels>
     <labels>
@@ -21,15 +29,23 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_First</shortDescription>
+        <shortDescription>First button (jumps back to first page of the product lots)</shortDescription>
         <value>First</value>
+    </labels>
+    <labels>
+        <fullName>POB_Heading_New</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Header for a new Purchase Order within the PO Builder page</shortDescription>
+        <value>New Purchase Order</value>
     </labels>
     <labels>
         <fullName>POB_Last</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Last</shortDescription>
+        <shortDescription>Last button (jumps forward to the last page of product lots)</shortDescription>
         <value>Last</value>
     </labels>
     <labels>
@@ -45,8 +61,24 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Next</shortDescription>
+        <shortDescription>Next button, goes to the following page of lots</shortDescription>
         <value>Next</value>
+    </labels>
+    <labels>
+        <fullName>POB_NoFilter</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Option in the Purchase Order Builder to reset the product category filter</shortDescription>
+        <value>--Any Category--</value>
+    </labels>
+    <labels>
+        <fullName>POB_No_Products</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_No_Products</shortDescription>
+        <value>Sorry, no products found.</value>
     </labels>
     <labels>
         <fullName>POB_Page</fullName>
@@ -61,8 +93,32 @@
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POB_Prev</shortDescription>
+        <shortDescription>Previous button, goes to the previous page of lots</shortDescription>
         <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>POB_PricePerUnit</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label for purchase order price per unit (summary section)</shortDescription>
+        <value>Price/Unit</value>
+    </labels>
+    <labels>
+        <fullName>POB_Save</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Save button</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>POB_Summary</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Summary</shortDescription>
+        <value>Summary</value>
     </labels>
     <labels>
         <fullName>POB_Title</fullName>
@@ -73,11 +129,27 @@
         <value>Purchase Order Builder</value>
     </labels>
     <labels>
+        <fullName>POB_Units</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label for purchase order units (summary section)</shortDescription>
+        <value>Units</value>
+    </labels>
+    <labels>
         <fullName>POB_Waiting</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>POB_Waiting</shortDescription>
         <value>Updating Summary...</value>
+    </labels>
+    <labels>
+        <fullName>POB_Waiting_Filter</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POB_Waiting_Filter</shortDescription>
+        <value>Updating Category Filter...</value>
     </labels>
 </CustomLabels>

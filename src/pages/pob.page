@@ -97,7 +97,7 @@
 					</apex:pageBlockTable>
 					
 					<apex:outputPanel rendered="{!wrappers.size==0}">
-						<apex:outputText value="No products found"/>
+						<apex:outputText value="{!$Label.POB_No_Products}"/>
 					</apex:outputPanel>
 					
 					
