@@ -30,16 +30,13 @@ private class PobControllerExtTest {
 	private static final Integer EXPECTED_PAGES_ORANGES_AND_PEARS = 3;
 	private static final Integer EXPECTED_PAGES_ORANGES_ONLY = 1;
 	private static final Integer EXPECTED_PAGES_PEARS_ONLY = 2;
+	private static final Decimal TEST_ORDER_BUDGET = 150000;
 
 	static testMethod void testAccess() {
 		
 	}
 	
 	static testMethod void testValidation() {
-		
-	}
-	
-	static testMethod void testSummary() {
 		
 	}
 	
@@ -57,6 +54,11 @@ private class PobControllerExtTest {
     	Order__c myOrder = TestDataFactory.createOrder(myAccount);
 		ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
     	PobControllerExt ce = new PobControllerExt(sc);
+    	
+    	// Test picklist values are loaded
+    	List<SelectOption> options = ce.getFilterValues();
+    	System.assertEquals(true, options.size()>0, 'Options expected in the filter picklist');
+    	
     	
     	/* 	TEST CASE #1 
     		By default filter must be OFF
@@ -227,6 +229,7 @@ private class PobControllerExtTest {
     	
     	// Create controller
     	Order__c myOrder = TestDataFactory.createOrder(myAccount);
+    	
 		ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
     	PobControllerExt ce = new PobControllerExt(sc);
     	
@@ -237,6 +240,29 @@ private class PobControllerExtTest {
     	
     }
     
+    static testMethod void testFilterValues() {
+    	
+    	Test.setCurrentPage(Page.pob);
+	    Account myAccount = TestDataFactory.createAccount();
+	    Order__c myOrder = TestDataFactory.createOrder(myAccount);
+    	insert myAccount;
+    	
+    	// 
+		ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+    	PobControllerExt ce = new PobControllerExt(sc);
+    	
+    	
+    	
+    	
+    	
+    }
+    
+    /*
+        List<Apexpages.Message> msgs = ApexPages.getMessages();
+		for (Apexpages.Message msg:msgs) {
+			System.debug('***ERROR '  + msg);
+		}
+    */
     static testMethod void testCreateNewOrder() {
     	
 		// Setup data    	
@@ -245,17 +271,62 @@ private class PobControllerExtTest {
     	insert lots;
     	insert myAccount;
     	
+    	// Transient order
+    	Order__c myOrder = TestDataFactory.createOrder(TEST_ORDER_BUDGET);
+    	
     	// Create controllers
-    	Order__c myOrder = TestDataFactory.createOrder(myAccount);
     	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
     	PobControllerExt ce = new PobControllerExt(sc);
+    	
+    	// Start test
+    	Test.setCurrentPage(Page.pob);
+    	Test.startTest();
 
 		// Test heading and pagination controls  	
     	System.assertEquals(Label.POB_Heading_New, ce.heading, 'Heading is incorrect when creating a new order');
         System.assertEquals(true, ce.getPrevDisabled(), 'Prev button should be disabled');
         System.assertEquals(false, ce.getNextDisabled(), 'Prev button should be disabled');
         
-        //TODO: do stuff
+		// 1) Empty Selection: Check summary and selection
+        System.assertEquals(0, ce.getUnits(), 'Summary error - Unexpected value in number of units');
+        System.assertEquals(null, ce.getPricePerUnit(), 'Summary error - Unexpected value in price per unit');
+        for (PobControllerExt.Wrapper w : ce.wrappersMap.values()) {
+        	System.assertEquals(0, w.units, 'Units should be 0 on an empty order');
+        }
+        
+        // 2) Add a couple of products, check summary and selection
+        ce.setLotQuantity(ce.wrappers[0].product.Id, 2);
+        ce.setLotQuantity(ce.wrappers[1].product.Id, 3);
+        ce.updateSelection();
+        System.assertEquals(2, ce.wrappers[0].units, 'Selection error - Inconsistent number of units');
+        System.assertEquals(3, ce.wrappers[1].units, 'Selection error - Inconsistent number of units');
+        System.assertEquals(5, ce.getUnits(), 'Summary error - Unexpected value in number of units');
+        System.assertEquals(TestDataFactory.TEST_LOT_PRICE, ce.getPricePerUnit(), 'Summary error - Unexpected value in price per unit');
+        
+        // Try to save, errors are expected (no store given)
+        PageReference nextPage = ce.save();
+        System.assertEquals(sc.view().getUrl(), nextPage.getUrl(), 'Unexpected page reference, validation error expected here');
+        ApexPages.currentPage().getParameters().put('hasError','true');  
+    	System.assertEquals(true, ApexPages.getMessages().size()>0, 'Unexpected - error messages expected');
+        List<Order__c> orders = [SELECT Id FROM Order__c];
+        List<Line_Item__c> lineItems = [SELECT Id, Order__c, Lot__c, Units__c FROM Line_Item__c];
+        System.assertEquals(0, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
+        System.assertEquals(0, lineItems.size(), 'Unexpected - inconsistent number of line items');
+        
+        // Fix the error and try to save again
+        ce.po.Store__c = myAccount.Id;
+        nextPage = ce.save();
+        System.assertEquals(null, nextPage.getUrl(), 'Unexpected page reference');
+		orders = [SELECT Id FROM Order__c];
+        lineItems = [SELECT Id, Order__c, Lot__c, Units__c FROM Line_Item__c];
+        System.assertEquals(1, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
+        System.assertEquals(2, lineItems.size(), 'Unexpected - inconsistent number of line items');
+        for (Line_Item__c li : lineItems) {
+        	System.assertEquals(orders[0].Id, li.Order__c, 'Unexpected - line item do not match order');	
+        }
+        
+        // End test
+        Test.stopTest();
     }
     
     static testMethod void testEditExistingOrder() {
@@ -269,9 +340,20 @@ private class PobControllerExtTest {
     	Order__c myOrder = TestDataFactory.createOrder(myAccount);
     	insert myOrder;
     	
+    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
+    	for (Lot__c l : lots) {
+    		 Line_Item__c li = TestDataFactory.createLineItem(myOrder, l, 1);
+    		 lineItems.add(li);
+    	}
+    	insert lineItems;
+    	
 		// Create controllers
     	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
     	PobControllerExt ce = new PobControllerExt(sc);
+		PageReference editPage = sc.edit();
+    	//System.assertEquals(Page.POB, editPage, 'Edit page should be Purchase Order Builder');
+    	//Test.setCurrentPage(editPage);
+    	
 
 		// Test heading and pagination controls    	
     	System.assertEquals(myOrder.name, ce.heading, 'Expected order name as heading when editing an existing order');

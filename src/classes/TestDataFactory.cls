@@ -24,11 +24,22 @@ public class TestDataFactory {
 	public static Order__c createOrder(Account a) {
 		return createOrders(new List<Account> {a}).get(0);
 	}
+
+	public static Order__c createOrder(Decimal budget) {
+		Order__c o = new Order__c();
+		o.Budget__c = budget;
+		o.Name = 'A test order';
+		o.Status__c = 'Draft';
+		return o; 
+	}
+	
 	
 	public static List<Order__c> createOrders(List<Account> accounts) {
 		List<Order__c> orders = new List<Order__c>();
 		for (Account a : accounts) {
 			Order__c o = new Order__c();
+			o.Name = 'A test order';
+			o.Status__c = 'Draft';
 			o.Store__c = a.Id;
 			orders.add(o);
 		}

@@ -13,12 +13,11 @@ public with sharing class PobControllerExt {
 	// Records
 	public Order__c po {get;set;}
 	public List<Wrapper> wrappers {get;set;}
-	
-	// Private stuff
-	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
-	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>(); 
-	
+
 	@TestVisible 
+	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
+	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>();
+	
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
 	
@@ -97,8 +96,7 @@ public with sharing class PobControllerExt {
 	
 	public void updateSelection() {
 		if (lotId!=null && quantity!=null) {
-			quantityMap.put(lotId, Decimal.valueOf(quantity));
-			refreshWrappers();
+			setLotQuantity(lotId, Decimal.valueOf(quantity));
 		} else {
 			System.debug('*** Selection NOT updated');			
 		}
@@ -163,10 +161,11 @@ public with sharing class PobControllerExt {
 				}
 				insert lineItems;
 				System.debug('*** Save successful ***');
-				return saveResult;
+				return stdCtrl.view();
 			} catch (Exception e) {
 				// In case of error rollback and stay on the same page (display errors)
 				Database.rollback(sp);
+				po.addError(e.getMessage());
 				ApexPages.addMessages(e);
 				return null;
 			}
@@ -182,10 +181,10 @@ public with sharing class PobControllerExt {
 		wrappers = new List<Wrapper>();
 		List<Lot__c> lots = setCtrl.getRecords();
 		for (Lot__c l : lots) { 
-			Decimal units = quantityMap.get(l.id)!=null ? quantityMap.get(l.id) : 0;
-			Wrapper w = wrappersMap.get(l.id) !=null ? wrappersMap.get(l.id) : new Wrapper(l, units);
+			Decimal units = getLotQuantity(l.Id);
+			Wrapper w = getWrapper(l);
+			w.units = units;
 			wrappers.add(w);
-			wrappersMap.put(l.id, w);
 		}
 	}
 	
@@ -197,6 +196,23 @@ public with sharing class PobControllerExt {
 	
 	private boolean isEditingExistingOrder() {
 		return (po!=null && po.Id!=null) ? true : false;
+	}
+	
+	@TestVisible
+	private void setLotQuantity(Id lotId, Decimal quantity) {
+		quantityMap.put(lotId, quantity);
+		refreshWrappers();
+	}
+	
+	private Decimal getLotQuantity(Id lotId) {
+		return quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
+	}
+	
+	@TestVisible
+	private Wrapper getWrapper(Lot__c l) {
+		Wrapper w = wrappersMap.get(l.id) !=null ? wrappersMap.get(l.id) : new Wrapper(l, 0);
+		wrappersMap.put(l.id, w);
+		return w;
 	}
 	
 	/* Inner classes
