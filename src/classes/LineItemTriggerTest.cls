@@ -57,9 +57,6 @@ private class LineItemTriggerTest {
 		
 		Test.startTest();
 			insert largeBulk;
-			System.assert(Limits.getLimitCpuTime()>=0, 'Large Volumes Issue - CPU time');
-			System.assert(Limits.getLimitDMLStatements()>=0, 'Large Volumes Issue - DML statements');
-			System.assert(Limits.getLimitHeapSize()>=0, 'Large Volumes Issue - Heap size');
 		Test.stopTest();
 	}
 	
@@ -84,9 +81,14 @@ private class LineItemTriggerTest {
     	lineItems.add( myApples );
     	lineItems.add( myPears );
     	
-    	insert lineItems;
+    	Test.startTest();
+    		insert lineItems;
+    	Test.stopTest();
     	
-    	
+    	lineItems = [SELECT Id, Order__c FROM Line_Item__c];
+    	for (Line_Item__c li : lineItems) {
+    		System.assertEquals(null, li.Order__c, 'Order should be null');
+    	}
 	}
 	
 	@IsTest(seeAllData=false)
@@ -130,6 +132,7 @@ private class LineItemTriggerTest {
     	lineItems.add( TestDataFactory.createLineItem(someoneElsesOrder, oranges, 1) );
     	lineItems.add( TestDataFactory.createLineItem(someoneElsesOrder, pears, 2) );
     	insert lineItems;
+    	
     	
 		// Reload myOrder and assert results on insert (for both price and 1st + 2nd category)
 		Decimal expectedAmount = 9*TEST_PRICE_ORANGES + (6+5)*TEST_PRICE_PEARS + 10*TEST_PRICE_APPLES;
