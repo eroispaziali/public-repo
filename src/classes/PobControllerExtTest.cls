@@ -305,7 +305,7 @@ private class PobControllerExtTest {
         
         // Try to save, errors are expected (no store given)
         PageReference nextPage = ce.save();
-        System.assertEquals(sc.view().getUrl(), nextPage.getUrl(), 'Unexpected page reference, validation error expected here');
+        System.assertEquals(null, nextPage, 'Unexpected page reference, validation error expected here');
         ApexPages.currentPage().getParameters().put('hasError','true');  
     	System.assertEquals(true, ApexPages.getMessages().size()>0, 'Unexpected - error messages expected');
         List<Order__c> orders = [SELECT Id FROM Order__c];
@@ -316,7 +316,7 @@ private class PobControllerExtTest {
         // Fix the error and try to save again
         ce.po.Store__c = myAccount.Id;
         nextPage = ce.save();
-        System.assertEquals(null, nextPage.getUrl(), 'Unexpected page reference');
+        System.assertEquals(sc.view(), nextPage, 'Unexpected page reference');
 		orders = [SELECT Id FROM Order__c];
         lineItems = [SELECT Id, Order__c, Lot__c, Units__c FROM Line_Item__c];
         System.assertEquals(1, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
