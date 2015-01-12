@@ -105,8 +105,6 @@ public class TestDataFactory {
 		return li; 
 	}
 	
-	
-	// in use
 	public static Lot__c createLot(String productCategory, Decimal unitPrice) {
 		Lot__c myLot = createLots(productCategory, 1).get(0);
 		myLot.Unit_Price__c = unitPrice;
