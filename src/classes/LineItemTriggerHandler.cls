@@ -22,19 +22,6 @@ public with sharing class LineItemTriggerHandler {
 		updatePurchasedAmount(orders, lineItems);
 		updateCategories(orders, lineItems);
 		update orders;
-		/*
-		Database.SaveResult[] srList = Database.update(orders, false);
-		for (Database.SaveResult sr : srList) {
-		    if (!sr.isSuccess()) {
-		    	Line_Item__sr.getId()
-		        for (Database.Error err : sr.getErrors()) {
-		        	for
-		            System.debug('The following error has occurred.');                    
-		            System.debug(err.getStatusCode() + ': ' + err.getMessage());
-		            System.debug('Account fields that affected this error: ' + err.getFields());
-		        }
-		    }
-	}*/
 	}
 	
 	/* Utility methods (not exposed)

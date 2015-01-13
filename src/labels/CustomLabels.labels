@@ -134,7 +134,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Label for purchase order units (summary section)</shortDescription>
-        <value>Units</value>
+        <value># of Units</value>
     </labels>
     <labels>
         <fullName>POB_Waiting</fullName>
