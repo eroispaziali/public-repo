@@ -40,10 +40,16 @@ private class PobControllerExtTest {
 		}
     */
 
-	/** TEST CASE - Test filter
-    	Ensure filter works properly when the page is created, the filter is set and reset back.
+	/** 
+		TEST PRODUCT CATEGORY FILTER
+		==========================================================================================
+    	Ensure category filter works properly when the page is created, 
+    	the filter is set and reset back.
+    		1) by default the filter must be off
+    		2) when turned on only products of a specific category must be shown
+    		3) if the value of the filter isn't found, no results shoul be displayed
     	========================================================================================== */
-	static testMethod void testFilter() {
+	static testMethod void testCategoryFilter() {
 		
 		// Vars, users & data
 		Account myAccount;
@@ -64,72 +70,70 @@ private class PobControllerExtTest {
     		
     		Test.startTest();
     		
-    		// Create controller    	
-	    	myOrder = TestDataFactory.createOrder(myAccount);
-			ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
-	    	PobControllerExt ce = new PobControllerExt(sc);
-	    	
-	    	// Test picklist values are loaded
-	    	List<SelectOption> options = ce.getFilterValues();
-	    	System.assertEquals(true, options.size()>0, 'Options expected in the filter picklist');
-	    	
-	    	
-	    	/* 	TEST CASE #1 
-	    		By default filter must be OFF
-	    		Check number of pages, products count for each category
-			============================================================================ */
-	    	System.assertEquals(EXPECTED_PAGES_ORANGES_AND_PEARS, ce.getNumberOfPages(), 'Inconsistent number of pages when filter is OFF');
-	    	Integer orangesCount = 0, pearsCount = 0;
-	    	for (Integer i=0; i<ce.getNumberOfPages(); i++) {
-	    		System.assertNotEquals(0, ce.wrappers.size(), 'Empty pages detected when filter is OFF'); 
-	    		for (PobControllerExt.Wrapper w:ce.wrappers) {
-	    			if (w.product.Product_Category__c == PEARS) {
-	    				pearsCount++;
-	    			}
-	    			if (w.product.Product_Category__c == ORANGES) {
-	    				orangesCount++;
-	    			}
-	    		}
-	    		ce.nextPage();
-	    	} 
-	    	System.assertEquals(NUMBER_OF_LOTS_PEARS, pearsCount, 'Inconsisent products count across pages with filter OFF');
-	    	System.assertEquals(NUMBER_OF_LOTS_ORANGES, orangesCount, 'Inconsisent products count across pages with filter OFF');
-	    	
-	    	/* 	TEST CASE #2 
-	    		Turn ON filter, using showing only products of a specific category
-	    		Check number of pages, products count for each category
-			============================================================================ */
-	    	ce.categoryFilter = PEARS;
-	    	ce.updateFilter();
-	    	System.assertEquals(EXPECTED_PAGES_PEARS_ONLY, ce.getNumberOfPages(), 'Inconsistent number of pages with filter ON');
-	    	orangesCount = pearsCount = 0;
-	    	for (Integer i=0; i<ce.getNumberOfPages(); i++) {
-	    		System.assertNotEquals(0, ce.wrappers.size(), 'Empty pages detected when filter is ON');
-	    		for (PobControllerExt.Wrapper w:ce.wrappers) {
-	    			if (w.product.Product_Category__c == PEARS) {
-	    				pearsCount++;
-	    			}
-	    			if (w.product.Product_Category__c == ORANGES) {
-	    				orangesCount++;
-	    			}
-	    		}
-	    		ce.nextPage();
-	    	} 
-	    	System.assertEquals(NUMBER_OF_LOTS_PEARS, pearsCount, 'Inconsisent products count across pages with filter ON');
-	    	System.assertEquals(0, orangesCount, 'Oranges should have been filtered out');
-	    	
-	    	/* 	TEST CASE #3 
-	    		Turn ON filter, using a category that has no records
-	    		Check number of pages, products count for each category
-			============================================================================ */
-	    	ce.categoryFilter = 'This category does not exist';
-	    	ce.updateFilter();
-	    	System.assertEquals(0, ce.getNumberOfPages(), 'No pages should be found when filtering by a product category that does not exist');
-	    	System.assertEquals(0, ce.wrappers.size(), 'Page should be empty when filtering by a category not found');
+	    		// Create controller    	
+		    	myOrder = TestDataFactory.createOrder(myAccount);
+				ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+		    	PobControllerExt ce = new PobControllerExt(sc);
+		    	
+		    	// Test picklist values are loaded
+		    	List<SelectOption> options = ce.getFilterValues();
+		    	System.assertEquals(true, options.size()>0, 'Options expected in the filter picklist');
+		    	
+		    	
+		    	/* 	(1)  By default filter must be OFF
+		    		Check number of pages, products count for each category
+				============================================================================ */
+		    	System.assertEquals(EXPECTED_PAGES_ORANGES_AND_PEARS, ce.getNumberOfPages(), 'Inconsistent number of pages when filter is OFF');
+		    	Integer orangesCount = 0, pearsCount = 0;
+		    	for (Integer i=0; i<ce.getNumberOfPages(); i++) {
+		    		System.assertNotEquals(0, ce.wrappers.size(), 'Empty pages detected when filter is OFF'); 
+		    		for (PobControllerExt.Wrapper w:ce.wrappers) {
+		    			if (w.product.Product_Category__c == PEARS) {
+		    				pearsCount++;
+		    			}
+		    			if (w.product.Product_Category__c == ORANGES) {
+		    				orangesCount++;
+		    			}
+		    		}
+		    		ce.nextPage();
+		    	} 
+		    	System.assertEquals(NUMBER_OF_LOTS_PEARS, pearsCount, 'Inconsisent products count across pages with filter OFF');
+		    	System.assertEquals(NUMBER_OF_LOTS_ORANGES, orangesCount, 'Inconsisent products count across pages with filter OFF');
+		    	
+		    	/* 	(2) Turn ON filter, using showing only products of a specific category
+		    		Check number of pages, products count for each category
+				============================================================================ */
+		    	ce.categoryFilter = PEARS;
+		    	ce.updateFilter();
+		    	System.assertEquals(EXPECTED_PAGES_PEARS_ONLY, ce.getNumberOfPages(), 'Inconsistent number of pages with filter ON');
+		    	orangesCount = pearsCount = 0;
+		    	for (Integer i=0; i<ce.getNumberOfPages(); i++) {
+		    		System.assertNotEquals(0, ce.wrappers.size(), 'Empty pages detected when filter is ON');
+		    		for (PobControllerExt.Wrapper w:ce.wrappers) {
+		    			if (w.product.Product_Category__c == PEARS) {
+		    				pearsCount++;
+		    			}
+		    			if (w.product.Product_Category__c == ORANGES) {
+		    				orangesCount++;
+		    			}
+		    		}
+		    		ce.nextPage();
+		    	} 
+		    	System.assertEquals(NUMBER_OF_LOTS_PEARS, pearsCount, 'Inconsisent products count across pages with filter ON');
+		    	System.assertEquals(0, orangesCount, 'Oranges should have been filtered out');
+		    	
+		    	/* 	(3) Turn ON filter, using a category that has no records
+		    		Check number of pages, products count for each category
+				============================================================================ */
+		    	ce.categoryFilter = 'This category does not exist';
+		    	ce.updateFilter();
+		    	System.assertEquals(0, ce.getNumberOfPages(), 'No pages should be found when filtering by a product category that does not exist');
+		    	System.assertEquals(0, ce.wrappers.size(), 'Page should be empty when filtering by a category not found');
 	    	
 	    	Test.stopTest();
 		}
 	}
+	
 
 	/** 
     	TEST PAGINATION (Positive case)
