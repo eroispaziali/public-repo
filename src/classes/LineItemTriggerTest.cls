@@ -28,9 +28,38 @@ private class LineItemTriggerTest {
 	private static final Decimal TEST_PRICE_ORANGES = 4;
 	private static final Decimal TEST_PRICE_APPLES = 2;
 	private static final Decimal TEST_PRICE_PEARS = 3;
-	
-	@IsTest(seeAllData=false)
-	private static void testLargeVolumes() {
+
+	/** TEST WRAPPER COMPARATOR
+		==========================================================================================
+    	A sortable wrapper is used to sort results when counting product and product categories
+    	per order. This test ensure the comparator works as it should. 
+    	========================================================================================== */	
+	static testMethod void testWrapperComparator() {
+		Test.startTest();
+		
+		// Prepare wrappers: w1=w2, w1>w3
+		LineItemTriggerHandler.CategoryWrapper w1 = new LineItemTriggerHandler.CategoryWrapper('w1');
+		LineItemTriggerHandler.CategoryWrapper w2 = new LineItemTriggerHandler.CategoryWrapper('w2');
+		LineItemTriggerHandler.CategoryWrapper w3 = new LineItemTriggerHandler.CategoryWrapper('w3');
+		w1.addUnits(1);
+		w2.addUnits(1);
+		w3.addUnits(2);
+		
+		// Check results
+		System.assertEquals(1, w1.compareTo(w3), 'w1 greater than w3');
+		System.assertEquals(-1, w3.compareTo(w1), 'w3 less than w1');
+		System.assertEquals(0, w1.compareTo(w2), 'w1 equals w2');
+		
+		Test.stopTest();
+	}
+
+	/** TEST COMPUTATION ON VOLUMES
+		==========================================================================================
+    	This test ensures code scale to the required volumes without breaking governor limits
+			- 1000 product lots, 10 OLI per order, 10 Orders per Purchase agreement
+		Please note: no assertions on logic here, only volumes are tested. Logic is tested below. 
+    	========================================================================================== */	
+	static testMethod void testLargeVolumes() {
 		
 		User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
 		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
@@ -54,11 +83,6 @@ private class LineItemTriggerTest {
 				someLots.add(allTheLots[i]);
 			}
 			
-			/* TEST ON VOLUMES ONLY
-	    	 * Make sure code scale to the required volumes without breaking governor limits
-	    	 * 1000 product lots, 10 OLI per order, 10 Orders per Purchase agreement
-	    	 * WARNING: no assertions on logic here, only volumes are tested. Logic is tested below.
-	    	=============================================================================================================== */
 			List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, someLots, 1);
 			Test.startTest();
 				insert largeBulk;
@@ -89,7 +113,7 @@ private class LineItemTriggerTest {
 	    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
 	    	Line_Item__c myApples = TestDataFactory.createLineItem(apples, 10);
 	    	Line_Item__c myOranges = TestDataFactory.createLineItem(oranges, 9);
-	    	Line_Item__c myPears = TestDataFactory.createLineItem(pears, 9);
+	    	Line_Item__c myPears = TestDataFactory.createLineItem(pears, 8);
 	    	lineItems.add( myOranges );
 	    	lineItems.add( myApples );
 	    	lineItems.add( myPears );
