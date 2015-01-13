@@ -167,10 +167,8 @@ public with sharing class PobControllerExt {
 				Database.rollback(sp);
 				po.addError(e.getMessage());
 				ApexPages.addMessages(e);
-				return null;
 			}
 		}
-		System.debug('*** Validation failed ***');
 		return null;
 	}
 	
@@ -224,11 +222,6 @@ public with sharing class PobControllerExt {
 		
 		public Decimal units {set;get;}
 		public Lot__c product {set;get;}
-		
-		public Wrapper(Lot__c product) {
-			this.units = 0;
-			this.product = product;
-		}
 		
 		public Wrapper(Lot__c product, Decimal units) {
 			this.units = units;

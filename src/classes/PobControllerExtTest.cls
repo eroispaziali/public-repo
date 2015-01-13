@@ -369,11 +369,13 @@ private class PobControllerExtTest {
     		// Save
 	        PageReference nextPage = ce.save();
 	        System.assertEquals(sc.view().getUrl(), nextPage.getUrl(), 'Unexpected page reference');
-			List<Order__c> orders = [SELECT Id FROM Order__c];
+			List<Order__c> orders = [SELECT Id, Name FROM Order__c];
 	        List<Line_Item__c> lineItems = [SELECT Id, Order__c, Lot__c, Units__c FROM Line_Item__c];
 	        
 	        // ensure Order is created with related line items...
 	        System.assertEquals(1, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
+	        System.assertEquals('Updated order name', orders[0].Name, 'Unexpected order name was expected to be updated');
+	        System.assertEquals(myOrder.Id, orders[0].Id, 'Unexpected - order ID has been changed');
 	        System.assertEquals(5, lineItems.size(), 'Unexpected - inconsistent number of line items');
 	        
 	        // Ensure line items are correct
@@ -396,6 +398,60 @@ private class PobControllerExtTest {
     		
 	    	Test.stopTest();
     	}
+    }
+
+	/** 
+		TEST PRODUCT SELECTION
+    	======================================================================
+    	Ensure that selection asyncronous action, works correctly in the
+    	controller. 
+    	====================================================================== */
+    
+    static testMethod void testUpdateSelection() {
+    	
+    	User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
+		List<Lot__c> lots;
+    	
+    	System.runAs(inventoryManager) {
+    		lots = TestDataFactory.createLots(5);
+    		insert lots;
+    	}
+    	
+    	System.runAs(accountManager) {
+    		Account myAccount = TestDataFactory.createAccount();
+    		insert myAccount;	
+    		
+    		// Transient order
+    		Order__c myOrder = TestDataFactory.createOrder(TEST_ORDER_BUDGET);
+    		myOrder.Store__c = myAccount.Id;
+    		
+    		// Create controllers
+	    	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+	    	PobControllerExt ce = new PobControllerExt(sc);
+	    	
+	    	// Start test
+	    	Test.setCurrentPage(Page.pob);
+	    	Test.startTest();
+	    	
+	    		Integer j=1;
+	    		for (Lot__c l : lots) {
+	    			ce.quantity = String.valueOf(j);
+	    			ce.lotId = l.Id;
+	    			ce.updateSelection();
+	    			j++;
+	    		}
+	    		
+	    		j = 1;
+	    		for (PobControllerExt.Wrapper w : ce.wrappers) {
+	    			System.assertEquals(j, w.units, 'Number of units inconsistent with selection');
+	    			j++;
+	    		}
+	    	
+	    	Test.stopTest();
+    	}
+    	
+    	
     }
     
 	/** 
