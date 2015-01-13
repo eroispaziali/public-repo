@@ -16,7 +16,6 @@ public with sharing class PobControllerExt {
 
 	@TestVisible 
 	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
-	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>();
 	
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
@@ -27,15 +26,33 @@ public with sharing class PobControllerExt {
 		if (isEditingExistingOrder()) {
 			heading = po.Name;
 			List<Line_Item__c> existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
-			for (Line_Item__c li : existingLineItems) {
-				quantityMap.put(li.Lot__c, li.Units__c);	
-			}
+			initWrapperMap(existingLineItems);
 		} else {
 			// On a new Purchase Order
 			heading = Label.POB_Heading_New;
+			initWrapperMap(null);
 		}
 		
 		resetFilter();
+	}
+	
+	private void initWrapperMap(List<Line_Item__c> lineItems) {
+		
+		wrappersMap = new Map<Id, Wrapper>();
+		
+		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
+		Set<Id> lotIds = new Set<Id>();
+		for (Line_Item__c l : lineItems) {
+			lotIds.add(l.Lot__c);
+			lot2Item.put(l.Lot__c, l);
+		}
+		
+		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
+		for (Lot__c lot : lots) {
+			Line_Item__c lineItem = lot2Item.get(lot.Id);
+			Wrapper w = new Wrapper(lot, lineItem);
+			wrappersMap.put(lot.Id, w);
+		}
 	}
 	
 	/* Public methods
@@ -179,9 +196,7 @@ public with sharing class PobControllerExt {
 		wrappers = new List<Wrapper>();
 		List<Lot__c> lots = setCtrl.getRecords();
 		for (Lot__c l : lots) { 
-			Decimal units = getLotQuantity(l.Id);
 			Wrapper w = getWrapper(l);
-			w.units = units;
 			wrappers.add(w);
 		}
 	}
@@ -198,20 +213,24 @@ public with sharing class PobControllerExt {
 	
 	@TestVisible
 	private void setLotQuantity(Id lotId, Decimal quantity) {
-		quantityMap.put(lotId, quantity);
+		//quantityMap.put(lotId, quantity);
 		refreshWrappers();
 	}
 	
 	private Decimal getLotQuantity(Id lotId) {
-		Decimal value = quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
-		System.debug('*** Quantity for product ' + lotId + ' is: ' + value);
-		return value;
+		//Decimal value = quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
+//		System.debug('*** Quantity for product ' + lotId + ' is: ' + value);
+		//return value;
+		return null;
 	}
 	
 	@TestVisible
 	private Wrapper getWrapper(Lot__c l) {
-		Wrapper w = wrappersMap.get(l.id) !=null ? wrappersMap.get(l.id) : new Wrapper(l, 0);
-		wrappersMap.put(l.id, w);
+		Wrapper w = wrappersMap.get(l.id);
+		if (w==null) {
+			w = new Wrapper(l, null);
+			wrappersMap.put(l.Id, w);
+		}
 		return w;
 	}
 	
@@ -220,19 +239,20 @@ public with sharing class PobControllerExt {
 	
 	public class Wrapper {
 		
-		public Decimal units {set;get;}
+		public Decimal units {
+			get{ return lineItem.Units__c; }
+			set{ lineItem.Units__c = value; }
+		}
 		public Lot__c product {set;get;}
+		public Line_Item__c lineItem {set;get;}
 		
-		public Wrapper(Lot__c product, Decimal units) {
-			this.units = units;
-			this.product = product;
+		public Wrapper(Lot__c lot, Line_Item__c lineItem) {
+			this.lineItem = (lineItem!=null) ? lineItem : new Line_Item__c(Lot__c = lot.Id, Units__c = 0);
+			this.product = lot;
 		}
 		
 		public Line_Item__c toLineItem() {
-			Line_Item__c li = new Line_Item__c();
-			li.Units__c = units;
-			li.Lot__c = product.Id;
-			return li;
+			return lineItem;
 		}
 	}
 	
