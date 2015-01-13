@@ -205,7 +205,9 @@ public with sharing class PobControllerExt {
 	}
 	
 	private Decimal getLotQuantity(Id lotId) {
-		return quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
+		Decimal value = quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
+		System.debug('*** Quantity for product ' + lotId + ' is: ' + value);
+		return value;
 	}
 	
 	@TestVisible
