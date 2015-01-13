@@ -249,8 +249,8 @@ private class PobControllerExtTest {
     	TEST PAGE HEADER CORRECTNESS
     	======================================================================
     	Ensure heading is as expected:
-    	- when creating new orders (label) 
-    	- when updateing existing orders (order name)
+    	(1) when creating new orders (label) 
+    	(2) when updateing existing orders (order name)
     	====================================================================== */
     static testMethod void testPageHeading() {
     	
@@ -265,7 +265,7 @@ private class PobControllerExtTest {
 		
 		Test.startTest();
 		
-		// 1) Check heading on new orders
+		// (1) Check heading on new orders
 		System.runAs(accountManager) {
 
 			// Create transient order
@@ -281,7 +281,7 @@ private class PobControllerExtTest {
 	    	System.assertEquals(Label.POB_Heading_New, ce.heading, 'Heading is incorrect when creating a new order');
 		}
 		
-		// 2) Check heading on existing orders
+		// (2) Check heading on existing orders
 		System.runAs(accountManager) {
 			
 			// Create persisted order
@@ -305,8 +305,8 @@ private class PobControllerExtTest {
 		TEST LOAD AND UPDATE OF AN EXISTING ORDER
     	======================================================================
     	Load a new order and ensure
-    	- order and line items are loaded 
-    	- on save data are updated 
+    	- (1) order and line items are loaded
+    	- (2) on save order and line items are updated 
     	====================================================================== */
 	static testMethod void testLoadAndEditExistingOrder() {
 		
@@ -323,16 +323,13 @@ private class PobControllerExtTest {
     	
     	// Setup account + order with line items
     	System.runAs(accountManager) {
-    		
 			Account myAccount = TestDataFactory.createAccount();
     		insert myAccount;	
-    		
     		myOrder = TestDataFactory.createOrder(TEST_ORDER_BUDGET);
     		myOrder.Store__c = myAccount.Id;
     		insert myOrder;
     		
     		List<Line_Item__c> lineItems = new List<Line_Item__c>();
-    		
     		for (Integer i=0; i<2; i++) {
     			lineItems.add( TestDataFactory.createLineItem(myOrder,lots[i],10) );
     			existingLotIds.add(lots[i].Id);
@@ -340,7 +337,7 @@ private class PobControllerExtTest {
     		insert lineItems;
     	}
     	
-    	// test data
+    	// Run tests
     	System.runAs(accountManager) {
 			ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
 	    	PobControllerExt ce = new PobControllerExt(sc);
@@ -348,13 +345,55 @@ private class PobControllerExtTest {
 	    	// Start test
 	    	Test.setCurrentPage(Page.pob);
 	    	Test.startTest();
-	    		for (PobControllerExt.Wrapper w : ce.wrappers) {
-	    			if (existingLotIds.contains(w.product.id)) {
-	    				System.assertEquals(10, w.units, 'Units should be pre-populated for products included in this order');
-	    			} else {
-	    				System.assertEquals(0, w.units, 'Units should be 0 for products not included as line items in this order');
-	    			}
-	    		}
+	    	
+	    	// (1) Test page load
+    		for (PobControllerExt.Wrapper w : ce.wrappers) {
+    			System.assertEquals(myOrder, ce.po, 'Wrong order loaded');
+    			if (existingLotIds.contains(w.product.id)) {
+    				System.assertEquals(10, w.units, 'Units should be pre-populated for products included in this order');
+    			} else {
+    				System.assertEquals(0, w.units, 'Units should be 0 for products not included as line items in this order');
+    			}
+    		}
+    		
+    		// (2) edit and save
+    		ce.po.Name = 'Updated order name';
+    		for (Lot__c l : lots) {
+    			if (existingLotIds.contains(l.id)) {
+    				ce.setLotQuantity(l.id, 20);
+    			} else {
+    				ce.setLotQuantity(l.id, 1);
+    			}
+    		}
+    		
+    		// Save
+	        PageReference nextPage = ce.save();
+	        System.assertEquals(sc.view().getUrl(), nextPage.getUrl(), 'Unexpected page reference');
+			List<Order__c> orders = [SELECT Id FROM Order__c];
+	        List<Line_Item__c> lineItems = [SELECT Id, Order__c, Lot__c, Units__c FROM Line_Item__c];
+	        
+	        // ensure Order is created with related line items...
+	        System.assertEquals(1, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
+	        System.assertEquals(5, lineItems.size(), 'Unexpected - inconsistent number of line items');
+	        
+	        // Ensure line items are correct
+	        // a) refer to the right Order__c and Lot__c
+	        // b) contain the right units
+	        Boolean newLineItemsFound = false;
+	        Boolean existingLineItemsFound = false; 
+	        for (Line_Item__c li : lineItems) {
+	        	System.assertEquals(myOrder.Id, li.Order__c, 'Unexpected - line item do not match order');
+	        	if (existingLotIds.contains(li.Lot__c)) {
+	        		System.assertEquals(20,li.Units__c);
+	        		existingLineItemsFound = true;
+	        	} else {
+	        		System.assertEquals(1,li.Units__c);
+	        		newLineItemsFound = true;
+	        	}
+	        }
+	        System.assertEquals(true, existingLineItemsFound, 'Existing line items should have been to be modified');
+	        System.assertEquals(true, newLineItemsFound, 'New line items should have been added');
+    		
 	    	Test.stopTest();
     	}
     }
