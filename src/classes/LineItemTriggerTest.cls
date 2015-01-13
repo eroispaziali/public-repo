@@ -22,73 +22,87 @@
 @isTest
 private class LineItemTriggerTest {
 	
-	private static final Integer TEST_VOLUMES_NUMBER_OF_ACCOUNTS = 100;
-	private static final Integer TEST_VOLUMES_NUMBER_OF_LOTS = 1000;
+	private static final Integer TEST_VOLUMES_NUMBER_OF_ACCOUNTS = 10; //100;
+	private static final Integer TEST_VOLUMES_NUMBER_OF_LOTS = 10; //1000;
 	private static final Integer TEST_VOLUMES_LINE_ITEMS_PER_PURCHASE = 10;
-	
 	private static final Decimal TEST_PRICE_ORANGES = 4;
 	private static final Decimal TEST_PRICE_APPLES = 2;
 	private static final Decimal TEST_PRICE_PEARS = 3;
 	
-	//TODO: validate application security
-	
 	@IsTest(seeAllData=false)
 	private static void testLargeVolumes() {
 		
-		// Prepare data
-		List<Account> accounts = TestDataFactory.createAccounts(TEST_VOLUMES_NUMBER_OF_ACCOUNTS);
-		insert accounts;
-		List<Order__c> orders = TestDataFactory.createOrders(accounts);
-		insert orders;
-		List<Lot__c> allTheLots = TestDataFactory.createLots(TEST_VOLUMES_NUMBER_OF_LOTS);
-		insert allTheLots;
-		
-		List<Lot__c> someLots = new List<Lot__c>();
-		for (Integer i=0; i<TEST_VOLUMES_LINE_ITEMS_PER_PURCHASE; i++) {
-			someLots.add(allTheLots[i]);
+		User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
+		List<Lot__c> allTheLots;
+
+		// Inventory manager sets up accounts		
+		System.runAs(inventoryManager) {
+			allTheLots = TestDataFactory.createLots(TEST_VOLUMES_NUMBER_OF_LOTS);
+			insert allTheLots;
 		}
 		
-		/* TEST ON VOLUMES ONLY
-    	 * Make sure code scale to the required volumes without breaking governor limits
-    	 * 1000 product lots, 10 OLI per order, 10 Orders per Purchase agreement
-    	 * WARNING: no assertions on logic here, only volumes are tested. Logic is tested below.
-    	=============================================================================================================== */
-		List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, someLots, 1);
+		// Account manager creates accounts and orders
+		System.runAs(accountManager) {
+			List<Account> accounts = TestDataFactory.createAccounts(TEST_VOLUMES_NUMBER_OF_ACCOUNTS);
+			insert accounts;
+			List<Order__c> orders = TestDataFactory.createOrders(accounts);
+			insert orders;
+			
+			List<Lot__c> someLots = new List<Lot__c>();
+			for (Integer i=0; i<TEST_VOLUMES_LINE_ITEMS_PER_PURCHASE; i++) {
+				someLots.add(allTheLots[i]);
+			}
+			
+			/* TEST ON VOLUMES ONLY
+	    	 * Make sure code scale to the required volumes without breaking governor limits
+	    	 * 1000 product lots, 10 OLI per order, 10 Orders per Purchase agreement
+	    	 * WARNING: no assertions on logic here, only volumes are tested. Logic is tested below.
+	    	=============================================================================================================== */
+			List<Line_Item__c> largeBulk = TestDataFactory.createLineItems(orders, someLots, 1);
+			Test.startTest();
+				insert largeBulk;
+			Test.stopTest();
+		}
 		
-		Test.startTest();
-			insert largeBulk;
-		Test.stopTest();
 	}
 	
 	@IsTest(seeAllData=false)
 	private static void testOrphanLineItems() {
-		Account myStore = TestDataFactory.createAccount();
-		Account anotherStore = TestDataFactory.createAccount();
-		insert new List<Account> { myStore, anotherStore };
 		
-		Lot__c apples = TestDataFactory.createLot('apples', TEST_PRICE_APPLES);
-    	Lot__c pears = TestDataFactory.createLot('pears', TEST_PRICE_PEARS);
-    	Lot__c oranges = TestDataFactory.createLot('oranges', TEST_PRICE_ORANGES);
-    	List<Lot__c> lots = new List<Lot__c> { pears, oranges, apples }; 
-    	insert lots;
-    	
-    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
-    	Line_Item__c myApples = TestDataFactory.createLineItem(apples, 10);
-    	Line_Item__c myOranges = TestDataFactory.createLineItem(oranges, 9);
-    	Line_Item__c myPears = TestDataFactory.createLineItem(pears, 6);
-    	 
-    	lineItems.add( myOranges );
-    	lineItems.add( myApples );
-    	lineItems.add( myPears );
-    	
-    	Test.startTest();
-    		insert lineItems;
-    	Test.stopTest();
-    	
-    	lineItems = [SELECT Id, Order__c FROM Line_Item__c];
-    	for (Line_Item__c li : lineItems) {
-    		System.assertEquals(null, li.Order__c, 'Order should be null');
-    	}
+		User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
+		
+		System.runAs(inventoryManager) {
+			Account myStore = TestDataFactory.createAccount();
+			Account anotherStore = TestDataFactory.createAccount();
+			insert new List<Account> { myStore, anotherStore };
+		}
+		
+		System.runAs(accountManager) {
+			Lot__c apples = TestDataFactory.createLot('apples', TEST_PRICE_APPLES);
+	    	Lot__c pears = TestDataFactory.createLot('pears', TEST_PRICE_PEARS);
+	    	Lot__c oranges = TestDataFactory.createLot('oranges', TEST_PRICE_ORANGES);
+	    	List<Lot__c> lots = new List<Lot__c> { pears, oranges, apples }; 
+	    	insert lots;
+	    	
+	    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
+	    	Line_Item__c myApples = TestDataFactory.createLineItem(apples, 10);
+	    	Line_Item__c myOranges = TestDataFactory.createLineItem(oranges, 9);
+	    	Line_Item__c myPears = TestDataFactory.createLineItem(pears, 9);
+	    	lineItems.add( myOranges );
+	    	lineItems.add( myApples );
+	    	lineItems.add( myPears );
+	    	
+	    	Test.startTest();
+	    		insert lineItems;
+	    	Test.stopTest();
+	    	
+	    	lineItems = [SELECT Id, Order__c FROM Line_Item__c];
+	    	for (Line_Item__c li : lineItems) {
+	    		System.assertEquals(null, li.Order__c, 'Order should be null');
+	    	}
+		}
 	}
 	
 	@IsTest(seeAllData=false)
