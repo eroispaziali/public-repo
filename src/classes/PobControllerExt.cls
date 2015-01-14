@@ -3,8 +3,8 @@ public with sharing class PobControllerExt {
 	// Summary, filter, etc.
 	public String heading {get;set;}
 	public String categoryFilter {get;set;}
-	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name';
-	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
+	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE (Remaining__c>0 OR Id in :existingLotsInThisOrder) ORDER BY Name';
+	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE (Remaining__c>0 OR Id in :existingLotsInThisOrder) AND Product_Category__c = :categoryFilter ORDER BY Name';
 	private static final Integer PAGE_SIZE = 5;
 	
 	// Records
@@ -15,6 +15,7 @@ public with sharing class PobControllerExt {
 	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
+	private Set<Id> existingLotsInThisOrder = new Set<Id>();
 	
 	/** Extension constructor method */
 	public PobControllerExt(ApexPages.StandardController stdController) {
@@ -246,6 +247,7 @@ public with sharing class PobControllerExt {
 			for (Line_Item__c l : lineItems) {
 				lotIds.add(l.Lot__c);
 				lot2Item.put(l.Lot__c, l);
+				existingLotsInThisOrder.add(l.Lot__c);
 			}
 		}
 		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
