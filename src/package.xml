@@ -20,5 +20,11 @@
         <members>CustomLabels</members>
         <name>CustomLabels</name>
     </types>
+    <types>
+        <members>Account Managers</members>
+        <members>Admin</members>
+        <members>Inventory Managers</members>
+        <name>Profile</name>
+    </types>
     <version>28.0</version>
 </Package>
