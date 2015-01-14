@@ -107,9 +107,9 @@
 							<!-- ...while units on other orders can be edited -->
 							<apex:outputPanel rendered="{!unitsAreEditable==true}">
 								<apex:actionRegion >
-									<apex:inputText value="{!item.lineItem.Units__c}" required="true">
+									<apex:inputField value="{!item.lineItem.Units__c}" required="true">
 										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table"/>
-									</apex:inputText>
+									</apex:inputField>
 								</apex:actionRegion>
 							</apex:outputPanel>
 							

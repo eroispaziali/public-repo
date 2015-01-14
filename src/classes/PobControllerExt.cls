@@ -5,6 +5,7 @@ public with sharing class PobControllerExt {
 	public String categoryFilter {get;set;}
 	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name';
 	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
+	private static final Integer PAGE_SIZE = 5;
 	
 	// Records
 	public Order__c po {get;set;}
@@ -162,7 +163,7 @@ public with sharing class PobControllerExt {
 	public void updateFilter() {
 		String soql = (isFilterEnabled()) ? SOQL_WITH_FILTER : SOQL_WITHOUT_FILTER;
 		setCtrl = new ApexPages.StandardSetController(Database.getQueryLocator(soql));
-		setCtrl.setPageSize(5);
+		setCtrl.setPageSize(PAGE_SIZE);
 		System.debug('*** Filter is being updated. IsEnabled: ' + isFilterEnabled());
 		refreshWrappers();
 	}
@@ -171,7 +172,11 @@ public with sharing class PobControllerExt {
 	public PageReference save() {
 		Savepoint sp = Database.setSavepoint();
 		try {
+			
+			// create or update purchase order
 			upsert po;
+			
+			// which line items to be deleted or upserted?
 			List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
 			List<Line_Item__c> toBeUpserted = new List<Line_Item__c>();
 			for (Wrapper w : wrappersMap.values()) {
@@ -182,20 +187,47 @@ public with sharing class PobControllerExt {
 					toBeDeleted.add(w.lineItem);
 				}
 			} 
-			// delete & upsert
-			delete toBeDeleted;
-			upsert toBeUpserted;
-			return stdCtrl.save();
 			
+			// delete & upsert line items
+			List<Database.DeleteResult> dResults = Database.delete(toBeDeleted, false);
+			List<Database.UpsertResult> uResults = Database.upsert(toBeUpserted, false);
+			Boolean hasErrors = false;
+			
+			// Check UPSERT outcome
+			for (Integer i=0; i<uResults.size(); i++) {
+			    if (!uResults[i].isSuccess()) {
+			    	hasErrors = true;
+			        for (Database.Error e : uResults[i].getErrors()) {
+			        	toBeUpserted[i].Units__c.addError(e.getMessage());
+			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
+			        }
+			    }
+			}
+			
+			// Check DELETE outcome
+			for (Integer i=0; i<dResults.size(); i++) {
+			    if (!dResults[i].isSuccess()) {
+			    	hasErrors = true;
+			        for (Database.Error e : dResults[i].getErrors()) {
+			        	toBeDeleted[i].Units__c.addError(e.getMessage());
+			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
+			        }
+			    }
+			}		
+				
+			if (hasErrors) {
+				// Rollback & return to page
+				Database.rollback(sp);
+				return null;
+			} else {
+				// All good, go to record view page
+				return new ApexPages.StandardController(po).view();  
+			}
 		} catch (Exception e) {
-			
-			// Rollback
+			// Generic, unexpected exception: rollback and add friendly message
+			// then stay on the same page
 			Database.rollback(sp);
-			
-			// Add user friendly error messages
 			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
-			
-			// Stay on the same page
 			return null;
 		}
 	}

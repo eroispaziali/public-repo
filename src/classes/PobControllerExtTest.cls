@@ -710,16 +710,19 @@ private class PobControllerExtTest {
 	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getUnitsAreEditable() ,'All fields should be editable when creating a new order');
 	    		
 	    		ce.po.Status__c = 'Open';
 	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getUnitsAreEditable() ,'All fields should be editable when creating a new order');
 	    		
 	    		ce.po.Status__c = 'Closed';
 	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
 	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getUnitsAreEditable() ,'All fields should be editable when creating a new order');
 	    		
 	    	Test.stopTest();
     	}
@@ -758,16 +761,19 @@ private class PobControllerExtTest {
 	    		System.assertEquals(true, ce.getNameIsEditable() ,'Order Name should be modifiable for DRAFT orders');
 	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'Budget should be modifiable for DRAFT orders');
 	    		System.assertEquals(true, ce.getStatusIsEditable() ,'Order Status should be modifiable for DRAFT orders');
+	    		System.assertEquals(true, ce.getUnitsAreEditable() ,'Units should be modifiable for DRAFT orders');
 	    		
 	    		ce.po.Status__c = 'Open';
 	    		System.assertEquals(true, ce.getNameIsEditable() ,'Order Name should be modifiable for OPEN orders');
 	    		System.assertEquals(false, ce.getBudgetIsEditable() ,'Budget should NOT be modifiable for OPEN orders');
 	    		System.assertEquals(true, ce.getStatusIsEditable() ,'Order Status should be modifiable for OPEN orders');
+	    		System.assertEquals(true, ce.getUnitsAreEditable() ,'Units should be modifiable for DRAFT orders');
 	    		
 	    		ce.po.Status__c = 'Closed';
 	    		System.assertEquals(false, ce.getNameIsEditable() ,'Order Name should NOT be modifiable for CLOSED orders');
 	    		System.assertEquals(false, ce.getBudgetIsEditable() ,'Budget should NOT be modifiable for CLOSED orders');
 	    		System.assertEquals(false, ce.getStatusIsEditable() ,'Order Status should NOT be modifiable for CLOSED orders');
+				System.assertEquals(false, ce.getUnitsAreEditable() ,'Units should NOT be modifiable for DRAFT orders');
 	    		
 	    	Test.stopTest();
     	}
