@@ -28,7 +28,7 @@ public with sharing class PobControllerExt {
 		} else {
 			heading = Label.POB_Heading_New;
 		}
-		initWrapperMap(existingLineItems);
+		init(existingLineItems);
 		resetFilter();
 	}
 
@@ -237,15 +237,15 @@ public with sharing class PobControllerExt {
 	/* Utility methods (not exposed)
 	================================== */
 	
-	/** Set up the wrapperMap with existing line items (if any).
+	/** Prepopulates wrapperMap with existing line items (if any).
 		The wrapperMap property is used to keep the state
 		of the selection (number of units) */	
-	private void initWrapperMap(List<Line_Item__c> lineItems) {
+	private void init(List<Line_Item__c> existingLineItems) {
 		wrappersMap = new Map<Id, Wrapper>();
 		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
 		Set<Id> lotIds = new Set<Id>();
-		if (lineItems!=null) {
-			for (Line_Item__c l : lineItems) {
+		if (existingLineItems!=null) {
+			for (Line_Item__c l : existingLineItems) {
 				lotIds.add(l.Lot__c);
 				lot2Item.put(l.Lot__c, l);
 				existingLotsInThisOrder.add(l.Lot__c);
