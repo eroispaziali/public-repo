@@ -779,4 +779,81 @@ private class PobControllerExtTest {
     	}
     }
     
+    /** TEST PRODUCT LOTS LISTING
+    ========================================================================
+    Product lots with 0 units should not be displayed unless they are part
+    of the order already.
+    ======================================================================== */
+    static testMethod void testProductLotsListing() {
+    	
+		User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
+		Lot__c someApples = null, somePears = null, someOranges;
+		Order__c myOrder;
+    	
+    	// Prepare lots
+    	// Lot sizes are -> Apples: 2, Pears: 0, Oranges: 1
+    	System.runAs(inventoryManager) {
+    		someApples = TestDataFactory.createLot(APPLES, 2, 10);
+    		somePears = TestDataFactory.createLot(PEARS, 10, 0);
+    		someOranges = TestDataFactory.createLot(ORANGES, 10, 1);
+    		insert new List<Lot__c> { someApples, somePears, someOranges };
+    	}
+    	
+    	// Prepare order with line items
+    	// Note: The order includes: 1 apples, 1 orange
+    	System.runAs(accountManager) {
+		    Account myAccount = TestDataFactory.createAccount();
+	    	insert myAccount;
+	    	
+	    	// This order will include: 1 apples, 1 orange 
+	    	myOrder = TestDataFactory.createOrder(100000);
+	    	myOrder.Store__c = myAccount.Id;
+	    	insert myOrder;
+	    	
+	    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
+	    	lineItems.add( TestDataFactory.createLineItem(someApples, 1) );
+	    	lineItems.add( TestDataFactory.createLineItem(someOranges, 1) );
+	    	
+	    	insert lineItems;
+    	}
+    	
+    	// Start test
+    	System.runAs(accountManager) {
+	    	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+	    	PobControllerExt ce = new PobControllerExt(sc);
+	    	Test.setCurrentPage(Page.pob);
+	    	Test.startTest();
+	    	
+	    		Boolean applesFound = false, orangesFound = false, pearsFound = false;
+	    		for (PobControllerExt.Wrapper w : ce.wrappersMap.values()) {
+	    			
+	    			// any apples?
+	    			if (w.product.Id == someApples.Id) {
+	    				applesFound = true;
+	    			}
+	    			
+	    			// any oranges?
+	    			if (w.product.Id == someOranges.Id) {
+	    				orangesFound = true;
+	    			}
+					    	
+					// any pears?		
+					if (w.product.Id == somePears.Id) {
+	    				pearsFound = true;
+	    			}
+	    			
+	    		}
+	    		
+	    		// Check what products are listed?
+	    		System.assertEquals(true, applesFound, 'Apples should be listed as they are available');
+	    		System.assertEquals(false, pearsFound, 'Pears should NOT be listed as they are not available');
+	    		System.assertEquals(true, orangesFound, 'Oranges should be listed as they are part of the existing orded regardless remaining units');
+	    	
+	    	Test.stopTest();
+    	}
+    	
+    	
+    }
+    
 }

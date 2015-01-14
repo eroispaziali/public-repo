@@ -128,6 +128,14 @@ public class TestDataFactory {
 		return myLot;
 	}
 	
+	public static Lot__c createLot(String productCategory, Decimal unitPrice, Integer lotSize) {
+		Lot__c myLot = createLots(productCategory, 1).get(0);
+		myLot.Unit_Price__c = unitPrice;
+		myLot.Lot_Size__c = lotSize;
+		return myLot;
+	}
+	
+	
 	public static List<Lot__c> createLots(Integer howMany) {
 		return createLots(TEST_LOT_CATEGORY, howMany);
 	}
