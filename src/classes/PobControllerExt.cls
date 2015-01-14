@@ -6,10 +6,6 @@ public with sharing class PobControllerExt {
 	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name';
 	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
 	
-	// temp
-	public Id lotId {get;set;}
-	public String quantity {get;set;}
-	
 	// Records
 	public Order__c po {get;set;}
 	public List<Wrapper> wrappers {get;set;}

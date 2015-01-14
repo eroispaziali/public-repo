@@ -86,11 +86,8 @@
 							<!-- ...while units on other orders can be edited -->
 							<apex:outputPanel rendered="{!Order__c.Status__c!='Closed'}">
 								<apex:actionRegion >
-									<apex:inputText value="{!item.units}" required="true">
-										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table">
-											<apex:param name="lot" assignTo="{!lotId}" value="{!item.product.id}" />
-											<apex:param name="qty" assignTo="{!quantity}" value="{!item.units}"/>
-										</apex:actionSupport>
+									<apex:inputText value="{!item.lineItem.Units__c}" required="true">
+										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table"/>
 									</apex:inputText>
 								</apex:actionRegion>
 							</apex:outputPanel>
