@@ -175,7 +175,6 @@ public with sharing class PobControllerExt {
 		Savepoint sp = Database.setSavepoint();
 		try {
 			// create or update purchase order
-			upsert po;
 			Database.UpsertResult poResult = Database.upsert(po, false);
 			if (!poResult.isSuccess()) {
 			    throw new SaveException('Error while saving the purchase order');
