@@ -167,7 +167,6 @@ public with sharing class PobControllerExt {
 		String soql = (isFilterEnabled()) ? SOQL_WITH_FILTER : SOQL_WITHOUT_FILTER;
 		setCtrl = new ApexPages.StandardSetController(Database.getQueryLocator(soql));
 		setCtrl.setPageSize(PAGE_SIZE);
-		System.debug('*** Filter is being updated. IsEnabled: ' + isFilterEnabled());
 		refreshWrappers();
 	}
 	
