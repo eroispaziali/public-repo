@@ -53,7 +53,12 @@
 			</apex:pageBlockSection>
 			
 			<!-- Summary
-			============================= -->
+			==========================================================================================================================
+			IMPORTANT NOTE:
+			Requirement states "[..] as shown in Figure 1 Account Managers will be able to see summary stats for the purchase Order". 
+			My assumption is that the status has to be maintained based in real time with what is being added/removed to the order
+			using the purchase order builder, so that the summary reflects what the order will be once saved.
+			========================================================================================================================== -->
 			<apex:pageBlockSection title="{!$Label.POB_Summary}" columns="2" id="summary">
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_Units}"/>
@@ -95,12 +100,12 @@
 						<apex:column headerValue="Units">
 							
 							<!-- On closed orders units are read only... -->
-							<apex:outputPanel rendered="{!Order__c.Status__c=='Closed'}">
+							<apex:outputPanel rendered="{!unitsAreEditable==false}">
 								{!item.units}
 							</apex:outputPanel>
 							
 							<!-- ...while units on other orders can be edited -->
-							<apex:outputPanel rendered="{!Order__c.Status__c!='Closed'}">
+							<apex:outputPanel rendered="{!unitsAreEditable==true}">
 								<apex:actionRegion >
 									<apex:inputText value="{!item.lineItem.Units__c}" required="true">
 										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table"/>

@@ -12,8 +12,8 @@ public with sharing class PobControllerExt {
 
 	@TestVisible 
 	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
-	private ApexPages.StandardSetController setCtrl;
-	private ApexPages.StandardController stdCtrl;
+	private transient ApexPages.StandardSetController setCtrl;
+	private transient ApexPages.StandardController stdCtrl;
 	
 	/** Extension constructor method */
 	public PobControllerExt(ApexPages.StandardController stdController) {
@@ -30,26 +30,6 @@ public with sharing class PobControllerExt {
 		resetFilter();
 	}
 
-	/** Set up the wrapperMap with existing line items (if any).
-		The wrapperMap property is used to keep the state
-		of the selection (number of units) */	
-	private void initWrapperMap(List<Line_Item__c> lineItems) {
-		wrappersMap = new Map<Id, Wrapper>();
-		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
-		Set<Id> lotIds = new Set<Id>();
-		if (lineItems!=null) {
-			for (Line_Item__c l : lineItems) {
-				lotIds.add(l.Lot__c);
-				lot2Item.put(l.Lot__c, l);
-			}
-		}
-		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
-		for (Lot__c lot : lots) {
-			Line_Item__c lineItem = lot2Item.get(lot.Id);
-			Wrapper w = new Wrapper(lot, lineItem);
-			wrappersMap.put(lot.Id, w);
-		}
-	}
 	
 	/* Public methods
 	========================= */
@@ -66,6 +46,11 @@ public with sharing class PobControllerExt {
 	
 	/** Used on the Visualforce page to display editable/non editable status */
 	public boolean getStatusIsEditable() {
+		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
+	}
+	
+	/** Used on the Visualforce page to display editable/non editable units */	
+	public boolean getUnitsAreEditable() {
 		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
 	}
 	
@@ -137,7 +122,12 @@ public with sharing class PobControllerExt {
 		refreshWrappers();
 	}
 	
-	/** SUMMARY. Returns the number of units */
+	/** SUMMARY. Returns the number of units
+	==========================================================================================================================================
+	IMPORTANT NOTE: Requirement states "[..] as shown in Figure 1 Account Managers will be able to see summary stats for the purchase Order". 
+	My assumption is that the status has to be maintained based in real time with what is being added/removed to the order
+	using the purchase order builder, so that the summary reflects what the order will be once saved.
+	========================================================================================================================================== */
 	public Decimal getUnits() {
 		Decimal totalUnits = 0;
 		for (Wrapper w : wrappersMap.values()) {
@@ -146,7 +136,12 @@ public with sharing class PobControllerExt {
 		return totalUnits;
 	}
 	
-	/** SUMMARY. Returns the price per unit */
+	/** SUMMARY. Returns the price per unit
+	==========================================================================================================================================
+	IMPORTANT NOTE: Requirement states "[..] as shown in Figure 1 Account Managers will be able to see summary stats for the purchase Order". 
+	My assumption is that the status has to be maintained based in real time with what is being added/removed to the order
+	using the purchase order builder, so that the summary reflects what the order will be once saved.
+	========================================================================================================================================== */
 	public Decimal getPricePerUnit() {
 		Decimal totalCost = 0;
 		Decimal totalUnits = 0;
@@ -208,6 +203,27 @@ public with sharing class PobControllerExt {
 	/* Utility methods (not exposed)
 	================================== */
 	
+	/** Set up the wrapperMap with existing line items (if any).
+		The wrapperMap property is used to keep the state
+		of the selection (number of units) */	
+	private void initWrapperMap(List<Line_Item__c> lineItems) {
+		wrappersMap = new Map<Id, Wrapper>();
+		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
+		Set<Id> lotIds = new Set<Id>();
+		if (lineItems!=null) {
+			for (Line_Item__c l : lineItems) {
+				lotIds.add(l.Lot__c);
+				lot2Item.put(l.Lot__c, l);
+			}
+		}
+		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
+		for (Lot__c lot : lots) {
+			Line_Item__c lineItem = lot2Item.get(lot.Id);
+			Wrapper w = new Wrapper(lot, lineItem);
+			wrappersMap.put(lot.Id, w);
+		}
+	}
+	
 	private void refreshWrappers() {
 		wrappers = new List<Wrapper>();
 		List<Lot__c> lots = setCtrl.getRecords();
@@ -218,9 +234,7 @@ public with sharing class PobControllerExt {
 	}
 	
 	private boolean isFilterEnabled() {
-		Boolean isEnabled = (categoryFilter!=null && categoryFilter!='');
-		System.debug('*** IsFilterEnabled: ' + isEnabled + ', Value is: ' + categoryFilter) ;
-		return isEnabled;
+		return (categoryFilter!=null && categoryFilter!='');
 	}
 	
 	private boolean isEditingExistingOrder() {
@@ -237,11 +251,9 @@ public with sharing class PobControllerExt {
 		return w;
 	}
 	
-	/* Inner classes
+	/* Inner Wrapper class
 	========================= */
-	
 	public class Wrapper {
-		
 		public Decimal units {
 			get{ return lineItem.Units__c; }
 			set{ lineItem.Units__c = value; }
@@ -253,7 +265,6 @@ public with sharing class PobControllerExt {
 			this.lineItem = (lineItem!=null) ? lineItem : new Line_Item__c(Lot__c = lot.Id, Units__c = 0);
 			this.product = lot;
 		}
-		
 	}
 	
 }
