@@ -33,6 +33,14 @@
         <value>First</value>
     </labels>
     <labels>
+        <fullName>POB_Friendly_Error_LineItem</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Friendly error message on line items</shortDescription>
+        <value>Please review number of units</value>
+    </labels>
+    <labels>
         <fullName>POB_Friendly_Error_Message</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>

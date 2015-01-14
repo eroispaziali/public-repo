@@ -221,8 +221,6 @@ public with sharing class PobControllerExt {
 			  
 		} catch (SaveException e) {
 			Database.rollback(sp);
-			System.debug('*** SAVE EXCEPTION! ' + e.getMessage());
-			System.debug('*** CAUSE ' + e.getCause());
 			return null;
 		} catch (Exception e) {
 			// Generic, unexpected exception: rollback and add friendly message
