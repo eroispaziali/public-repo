@@ -229,6 +229,7 @@ public with sharing class PobControllerExt {
 			// then stay on the same page
 			Database.rollback(sp);
 			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
+			System.debug('*** ERROR! ' + e.getMessage());
 			return null;
 		}
 	}
