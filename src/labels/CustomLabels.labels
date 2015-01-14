@@ -38,8 +38,8 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Friendly Error Message on Save errors</shortDescription>
-        <value>This order cannot be saved at the moment. 
-This could be due to validation errors or some of the lots not being sufficient to fulfil the order. Please review your data and try again later.</value>
+        <value>Unfortunately this order cannot be saved at the moment.
+Please try again later. If the problem persists please contact your Salesforce administrator.</value>
     </labels>
     <labels>
         <fullName>POB_Heading_New</fullName>
