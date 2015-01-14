@@ -16,7 +16,7 @@
 			
 			<!-- Details
 			============================= -->
-			<apex:pageBlockSection title="Details" columns="2" id="details">
+			<apex:pageBlockSection title="{!$Label.POB_Details}" columns="2" id="details">
 			
 				<!-- Name -->
 				<apex:pageBlockSectionItem >
@@ -74,7 +74,7 @@
 
 			<!-- Filter & load indicator
 			================================ -->			
-			<apex:pageBlockSection title="Product Lots" columns="2">
+			<apex:pageBlockSection title="{!$Label.POB_Lots}" columns="2">
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$Label.POB_Filter}" for="filter"/>
 						<apex:actionRegion >
@@ -97,7 +97,7 @@
 					<apex:pageBlockTable var="item" value="{!wrappers}" rendered="{!wrappers.size>0}">
 					
 						<!-- Units -->
-						<apex:column headerValue="Units">
+						<apex:column headerValue="{!$ObjectType.Line_Item__c.fields.Units__c.Label}">
 							
 							<!-- On closed orders units are read only... -->
 							<apex:outputPanel rendered="{!unitsAreEditable==false}">
@@ -116,25 +116,26 @@
 						</apex:column>
 						
 						<!-- Product name -->
-						<apex:column headerValue="Product">{!item.product.Product__c}</apex:column>
+						<apex:column headerValue="{!$ObjectType.Lot__c.fields.Product__c.Label}">
+						{!item.product.Product__c}</apex:column>
 						
 						<!-- Lot number -->
-						<apex:column headerValue="Lot Number">
+						<apex:column headerValue="{!$ObjectType.Lot__c.fields.Name.Label}">
 							<apex:outputLink value="/{!item.product.id}" target="_blank">{!item.product.name}</apex:outputLink>
 						</apex:column>
 						
 						<!-- Unit Price -->
-						<apex:column headerValue="Unit Price">
+						<apex:column headerValue="{!$ObjectType.Lot__c.fields.Unit_Price__c.Label}">
 							<apex:outputText value="${0,number,###,###,##0.00}">
 							  <apex:param value="{!item.product.Unit_Price__c}"/>
 							</apex:outputText>
 						</apex:column>
 						
 						<!-- Product Category -->
-						<apex:column headerValue="Product Category">{!item.product.Product_Category__c}</apex:column>
+						<apex:column headerValue="{!$ObjectType.Lot__c.fields.Product_Category__c.Label}">{!item.product.Product_Category__c}</apex:column>
 						
 						<!-- Remaining Units -->
-						<apex:column headerValue="Remaining Units">
+						<apex:column headerValue="{!$ObjectType.Lot__c.fields.Remaining__c.Label}">
 							<apex:outputText value="{0,number,###,###,##0}">
 								<apex:param value="{!item.product.Remaining__c}"/>
 							</apex:outputText>
