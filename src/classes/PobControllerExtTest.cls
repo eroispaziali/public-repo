@@ -795,7 +795,7 @@ private class PobControllerExtTest {
     	// Lot sizes are -> Apples: 2, Pears: 0, Oranges: 1
     	System.runAs(inventoryManager) {
     		someApples = TestDataFactory.createLot(APPLES, 2, 10);
-    		somePears = TestDataFactory.createLot(PEARS, 10, 0);
+    		somePears = TestDataFactory.createLot(PEARS, 10, 1);
     		someOranges = TestDataFactory.createLot(ORANGES, 10, 1);
     		insert new List<Lot__c> { someApples, somePears, someOranges };
     	}
@@ -812,8 +812,9 @@ private class PobControllerExtTest {
 	    	insert myOrder;
 	    	
 	    	List<Line_Item__c> lineItems = new List<Line_Item__c>();
-	    	lineItems.add( TestDataFactory.createLineItem(someApples, 1) );
-	    	lineItems.add( TestDataFactory.createLineItem(someOranges, 1) );
+	    	lineItems.add( TestDataFactory.createLineItem(somePears, 1) );
+	    	lineItems.add( TestDataFactory.createLineItem(myOrder, someApples, 1) );
+	    	lineItems.add( TestDataFactory.createLineItem(myOrder, someOranges, 1) );
 	    	
 	    	insert lineItems;
     	}
@@ -852,8 +853,6 @@ private class PobControllerExtTest {
 	    	
 	    	Test.stopTest();
     	}
-    	
-    	
     }
     
 }
