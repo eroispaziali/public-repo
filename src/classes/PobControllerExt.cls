@@ -175,10 +175,7 @@ public with sharing class PobControllerExt {
 		Savepoint sp = Database.setSavepoint();
 		try {
 			// create or update purchase order
-			Database.UpsertResult poResult = Database.upsert(po, false);
-			if (!poResult.isSuccess()) {
-			    throw new SaveException('Error while saving the purchase order');
-			}
+			upsert po;
 			
 			// which line items to be deleted or upserted?
 			List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
@@ -193,10 +190,10 @@ public with sharing class PobControllerExt {
 			} 
 			
 			// delete & upsert line items
-			List<Database.DeleteResult> dResults = Database.delete(toBeDeleted, false);
-			List<Database.UpsertResult> uResults = Database.upsert(toBeUpserted, false);
+			delete toBeDeleted;
 			
-			// Check UPSERT outcome
+			// UPSERT, check outcome on this...
+			List<Database.UpsertResult> uResults = Database.upsert(toBeUpserted, false);
 			for (Integer i=0; i<uResults.size(); i++) {
 			    if (!uResults[i].isSuccess()) {
 			        for (Database.Error e : uResults[i].getErrors()) {
@@ -215,23 +212,20 @@ public with sharing class PobControllerExt {
 			    }
 			}
 			
-			// Check DELETE outcome
-			for (Integer i=0; i<dResults.size(); i++) {
-			    if (!dResults[i].isSuccess()) {
-			        throw new SaveException('Error while deleting line items');
-			    }
-			}		
 			// All good, go to record view page
 			return new ApexPages.StandardController(po).view();
 			  
 		} catch (SaveException e) {
-			System.debug('*** Save Exception! ' + e.getMessage());
 			handleRollback(sp);
 			return null;
+			
+		} catch (DmlException e) {
+			handleRollback(sp);
+			return null;
+			
 		} catch (Exception e) {
 			// Generic, unexpected exception: rollback and add friendly message
 			// then stay on the same page
-			System.debug('*** Unexpected Exception! ' + e.getMessage());
 			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
 			handleRollback(sp);
 			return null;
