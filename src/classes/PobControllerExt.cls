@@ -12,8 +12,8 @@ public with sharing class PobControllerExt {
 
 	@TestVisible 
 	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
-	private transient ApexPages.StandardSetController setCtrl;
-	private transient ApexPages.StandardController stdCtrl;
+	private ApexPages.StandardSetController setCtrl;
+	private ApexPages.StandardController stdCtrl;
 	
 	/** Extension constructor method */
 	public PobControllerExt(ApexPages.StandardController stdController) {
