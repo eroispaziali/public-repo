@@ -1,14 +1,10 @@
 public with sharing class PobControllerExt {
 
-	// Summary, filter, etc	
+	// Summary, filter, etc.
 	public String heading {get;set;}
 	public String categoryFilter {get;set;}
 	private static final String SOQL_WITHOUT_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c ORDER BY Name';
 	private static final String SOQL_WITH_FILTER = 'SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Product_Category__c = :categoryFilter ORDER BY Name';
-	
-	// temp
-	public Id lotId {get;set;}
-	public String quantity {get;set;}
 	
 	// Records
 	public Order__c po {get;set;}
@@ -16,46 +12,66 @@ public with sharing class PobControllerExt {
 
 	@TestVisible 
 	private Map<Id, Wrapper> wrappersMap = new Map<Id, Wrapper>();
-	private Map<Id, Decimal> quantityMap = new Map<Id, Decimal>();
-	
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
 	
+	/** Extension constructor method */
 	public PobControllerExt(ApexPages.StandardController stdController) {
+		List<Line_Item__c> existingLineItems = null;
 		stdCtrl = stdController;
 		po = (Order__c) stdCtrl.getRecord();
 		if (isEditingExistingOrder()) {
-			
-			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.INFO, 'Editing an existing order'));
-			
 			heading = po.Name;
-			List<Line_Item__c> existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
-			for (Line_Item__c li : existingLineItems) {
-				quantityMap.put(li.Lot__c, li.Units__c);	
-			}
+			existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
 		} else {
-			// On a new Purchase Order
 			heading = Label.POB_Heading_New;
 		}
-		
+		initWrapperMap(existingLineItems);
 		resetFilter();
+	}
+
+	/** Set up the wrapperMap with existing line items (if any).
+		The wrapperMap property is used to keep the state
+		of the selection (number of units) */	
+	private void initWrapperMap(List<Line_Item__c> lineItems) {
+		wrappersMap = new Map<Id, Wrapper>();
+		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
+		Set<Id> lotIds = new Set<Id>();
+		if (lineItems!=null) {
+			for (Line_Item__c l : lineItems) {
+				lotIds.add(l.Lot__c);
+				lot2Item.put(l.Lot__c, l);
+			}
+		}
+		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
+		for (Lot__c lot : lots) {
+			Line_Item__c lineItem = lot2Item.get(lot.Id);
+			Wrapper w = new Wrapper(lot, lineItem);
+			wrappersMap.put(lot.Id, w);
+		}
 	}
 	
 	/* Public methods
 	========================= */
-	
+
+	/** Used on the Visualforce page to display editable/non editable name */	
 	public boolean getNameIsEditable() {
 		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
 	}
 	
+	/** Used on the Visualforce page to display editable/non editable budget */
 	public boolean getBudgetIsEditable() {
 		return (po.Id==null || po.Status__c == 'Draft') ? true : false;
 	}
 	
+	/** Used on the Visualforce page to display editable/non editable status */
 	public boolean getStatusIsEditable() {
 		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
 	}
 	
+	/** Populates the possibile filter values by retrieving picklist values
+		from the object
+	 */
 	public List<SelectOption> getFilterValues () {
 		List<SelectOption> options = new List<SelectOption>();
 		options.add(new SelectOption('', Label.POB_NoFilter));
@@ -66,35 +82,41 @@ public with sharing class PobControllerExt {
 		return options;
 	}
 	
-	
+	/** Lots pagination. Moves to the first page */
 	public void firstPage() {
 		setCtrl.first();
 		refreshWrappers();
 	}
 	
+	/** Lots pagination. Moves to the last page */
 	public void lastPage() { 
 		setCtrl.last();
 		refreshWrappers();
 	}
 	
+	/** Lots pagination. Is the [previous] button disabled? */
 	public boolean getPrevDisabled() {
 		return !setCtrl.getHasPrevious();
 	}
 	
+	/** Lots pagination. Is the [next] button disabled? */
 	public boolean getNextDisabled() {
 		return !setCtrl.getHasNext();
 	}
 	
+	/** Lots pagination. Returns the number of lot pages */
 	public Integer getNumberOfPages() {
 		Integer recordCount = setCtrl.getResultSize();
 		Integer pageSize = setCtrl.getPageSize();
 		return recordCount / pageSize + ( Math.mod(recordCount, pageSize) > 0 ? 1 : 0);
 	}
 	
+	/** Lots pagination. Returns the current page */
 	public Integer getCurrentPage() {
 		return setCtrl.getPageNumber();
 	}
 	
+	/** Lots pagination. Moves to the next page */
 	public void nextPage() {
 		if (setCtrl.getHasNext()) {
 			setCtrl.next();
@@ -102,6 +124,7 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
+	/** Lots pagination. Moves to the previous page */
 	public void prevPage() {
 		if (setCtrl.getHasPrevious()) {
 			setCtrl.previous();
@@ -109,14 +132,12 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
+	/** Forces the selection (number of units) to be re-evaluated */
 	public void updateSelection() {
-		if (lotId!=null && quantity!=null) {
-			setLotQuantity(lotId, Decimal.valueOf(quantity));
-		} else {
-			System.debug('*** Selection NOT updated');			
-		}
+		refreshWrappers();
 	}
 	
+	/** SUMMARY. Returns the number of units */
 	public Decimal getUnits() {
 		Decimal totalUnits = 0;
 		for (Wrapper w : wrappersMap.values()) {
@@ -125,6 +146,7 @@ public with sharing class PobControllerExt {
 		return totalUnits;
 	}
 	
+	/** SUMMARY. Returns the price per unit */
 	public Decimal getPricePerUnit() {
 		Decimal totalCost = 0;
 		Decimal totalUnits = 0;
@@ -135,11 +157,13 @@ public with sharing class PobControllerExt {
 		return (totalUnits!=0) ? totalCost/totalUnits : null;
 	}
 	
+	/** FILTER. Resets the current filter so it's OFF */
 	public void resetFilter() {
 		categoryFilter = '';
 		updateFilter();
 	}
 	
+	/** FILTER. Updates and applies the filter on lots*/
 	public void updateFilter() {
 		String soql = (isFilterEnabled()) ? SOQL_WITH_FILTER : SOQL_WITHOUT_FILTER;
 		setCtrl = new ApexPages.StandardSetController(Database.getQueryLocator(soql));
@@ -148,46 +172,40 @@ public with sharing class PobControllerExt {
 		refreshWrappers();
 	}
 	
-	public boolean validate() {
-		return true;
-	}
-	
+	/** Saves and order */
 	public PageReference save() {
-		if (validate()) {
-			Savepoint sp = Database.setSavepoint();
-			try {
-				upsert po;
-				PageReference saveResult = stdCtrl.save();
-				
-				// delete existing line items (if any)
-				List<Line_Item__c> lineItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :po.Id];
-				if (lineItems!=null && lineItems.size()>0) {
-					delete lineItems;
+		Savepoint sp = Database.setSavepoint();
+		try {
+			upsert po;
+			//stdCtrl.save();
+			List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
+			List<Line_Item__c> toBeUpserted = new List<Line_Item__c>();
+			for (Wrapper w : wrappersMap.values()) {
+				if (w.units > 0) {
+					w.lineItem.Order__c = po.Id;
+					toBeUpserted.add(w.lineItem);
+				} else if (w.units == 0 && w.lineItem.Id!=null) {
+					toBeDeleted.add(w.lineItem);
 				}
-				
-				// create & insert new line items
-				lineItems = new List<Line_Item__c>();
-				for (Wrapper w : wrappersMap.values()) {
-					if (w.units > 0) {
-						Line_Item__c li = w.toLineItem();
-						li.Order__c = po.Id;
-						lineItems.add(li);
-					}					
-				}
-				insert lineItems;
-				System.debug('*** Save successful ***');
-				PageReference nextPage = stdCtrl.view();
-				nextPage.setRedirect(true);
-				return nextPage;
-			} catch (Exception e) {
-				// In case of error rollback and stay on the same page (display errors)
-				Database.rollback(sp);
-				po.addError(e.getMessage());
-				ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
-				ApexPages.addMessages(e);
-			}
+			} 
+			// delete & upsert
+			delete toBeDeleted;
+			upsert toBeUpserted;
+			
+			return stdCtrl.save();
+		} catch (DmlException e) {
+			
+			// Rollback
+			Database.rollback(sp);
+			
+			// Add user friendly error messages
+			po.addError(e.getMessage());
+			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
+			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
+			
+			// Stay on the same page
+			return null;
 		}
-		return null;
 	}
 	
 	/* Utility methods (not exposed)
@@ -197,9 +215,7 @@ public with sharing class PobControllerExt {
 		wrappers = new List<Wrapper>();
 		List<Lot__c> lots = setCtrl.getRecords();
 		for (Lot__c l : lots) { 
-			Decimal units = getLotQuantity(l.Id);
 			Wrapper w = getWrapper(l);
-			w.units = units;
 			wrappers.add(w);
 		}
 	}
@@ -215,21 +231,12 @@ public with sharing class PobControllerExt {
 	}
 	
 	@TestVisible
-	private void setLotQuantity(Id lotId, Decimal quantity) {
-		quantityMap.put(lotId, quantity);
-		refreshWrappers();
-	}
-	
-	private Decimal getLotQuantity(Id lotId) {
-		Decimal value = quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
-		System.debug('*** Quantity for product ' + lotId + ' is: ' + value);
-		return value;
-	}
-	
-	@TestVisible
 	private Wrapper getWrapper(Lot__c l) {
-		Wrapper w = wrappersMap.get(l.id) !=null ? wrappersMap.get(l.id) : new Wrapper(l, 0);
-		wrappersMap.put(l.id, w);
+		Wrapper w = wrappersMap.get(l.id);
+		if (w==null) {
+			w = new Wrapper(l, null);
+			wrappersMap.put(l.Id, w);
+		}
 		return w;
 	}
 	
@@ -238,20 +245,18 @@ public with sharing class PobControllerExt {
 	
 	public class Wrapper {
 		
-		public Decimal units {set;get;}
+		public Decimal units {
+			get{ return lineItem.Units__c; }
+			set{ lineItem.Units__c = value; }
+		}
 		public Lot__c product {set;get;}
+		public Line_Item__c lineItem {set;get;}
 		
-		public Wrapper(Lot__c product, Decimal units) {
-			this.units = units;
-			this.product = product;
+		public Wrapper(Lot__c lot, Line_Item__c lineItem) {
+			this.lineItem = (lineItem!=null) ? lineItem : new Line_Item__c(Lot__c = lot.Id, Units__c = 0);
+			this.product = lot;
 		}
 		
-		public Line_Item__c toLineItem() {
-			Line_Item__c li = new Line_Item__c();
-			li.Units__c = units;
-			li.Lot__c = product.Id;
-			return li;
-		}
 	}
 	
 }
