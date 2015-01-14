@@ -16,13 +16,15 @@ public with sharing class PobControllerExt {
 	private ApexPages.StandardSetController setCtrl;
 	private ApexPages.StandardController stdCtrl;
 	private Set<Id> existingLotsInThisOrder = new Set<Id>();
+	private boolean isExistingRecord = false;
 	
 	/** Extension constructor method */
 	public PobControllerExt(ApexPages.StandardController stdController) {
 		List<Line_Item__c> existingLineItems = null;
 		stdCtrl = stdController;
 		po = (Order__c) stdCtrl.getRecord();
-		if (isEditingExistingOrder()) {
+		isExistingRecord = (po!=null && po.Id != null) ? true : false; 
+		if (isExistingRecord) {
 			heading = po.Name;
 			existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
 		} else {
@@ -200,9 +202,14 @@ public with sharing class PobControllerExt {
 			for (Integer i=0; i<uResults.size(); i++) {
 			    if (!uResults[i].isSuccess()) {
 			        for (Database.Error e : uResults[i].getErrors()) {
+			        	
+			        	// Validation messages are friendly enough so will be displayed
+			        	// Other errors are replaced by a friendly error message
+			        	// to be placed both on fields and at page level
 			        	String friendlyMessage = 
 			        		(e.getStatusCode() == StatusCode.FIELD_CUSTOM_VALIDATION_EXCEPTION) 
 			        		? e.getMessage() : Label.POB_Friendly_Error_LineItem;
+			        		
 						toBeUpserted[i].Units__c.addError(friendlyMessage);			        	
 			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, friendlyMessage));
 			        }
@@ -220,17 +227,41 @@ public with sharing class PobControllerExt {
 			return new ApexPages.StandardController(po).view();
 			  
 		} catch (SaveException e) {
-			Database.rollback(sp);
+			System.debug('*** Save Exception! ' + e.getMessage());
+			handleRollback(sp);
 			return null;
 		} catch (Exception e) {
 			// Generic, unexpected exception: rollback and add friendly message
 			// then stay on the same page
-			Database.rollback(sp);
+			System.debug('*** Unexpected Exception! ' + e.getMessage());
 			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
-			System.debug('*** ERROR! ' + e.getMessage());
+			handleRollback(sp);
 			return null;
 		}
 	}
+	
+	/** TRANSACTION ROLLBACK
+		=======================================================================================================
+		Important note. As described in the documentation "The ID on an sObject inserted after setting a
+		savepoint is not cleared after a rollback.".
+		See: https://www.salesforce.com/us/developer/docs/apexcode/Content/langCon_apex_transaction_control.htm
+		
+		This simple method rollbacks and clears order IDs to avoid INVALID_CROSS_REFERENCE_KEY in subsequent 
+		save attempts.
+		======================================================================================================= */
+	private void handleRollback(Savepoint sp) {
+		
+		// Rollback savepoint
+		Database.rollback(sp);
+		
+		// If this is NOT a new order I should get rid
+		// of IDs in the po use clone method to get rid of IDs
+		if (isExistingRecord == false) {
+			po = po.clone(false);
+		}
+		
+		
+	} 
 	
 	/* Utility methods (not exposed)
 	================================== */
@@ -268,10 +299,6 @@ public with sharing class PobControllerExt {
 	
 	private boolean isFilterEnabled() {
 		return (categoryFilter!=null && categoryFilter!='');
-	}
-	
-	private boolean isEditingExistingOrder() {
-		return (po!=null && po.Id!=null) ? true : false;
 	}
 	
 	@TestVisible
