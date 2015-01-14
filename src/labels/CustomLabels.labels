@@ -33,6 +33,15 @@
         <value>First</value>
     </labels>
     <labels>
+        <fullName>POB_Friendly_Error_Message</fullName>
+        <categories>Purchase Order Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Friendly Error Message on Save errors</shortDescription>
+        <value>This order cannot be saved at the moment. 
+This could be due to validation errors or some of the lots not being sufficient to fulfil the order. Please review your data and try again later.</value>
+    </labels>
+    <labels>
         <fullName>POB_Heading_New</fullName>
         <categories>Purchase Order Builder</categories>
         <language>en_US</language>
