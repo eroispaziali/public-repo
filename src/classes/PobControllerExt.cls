@@ -259,8 +259,6 @@ public with sharing class PobControllerExt {
 		if (isExistingRecord == false) {
 			po = po.clone(false);
 		}
-		
-		
 	} 
 	
 	/* Utility methods (not exposed)
@@ -327,6 +325,7 @@ public with sharing class PobControllerExt {
 		}
 	}
 	
+	// Just a custom exception
 	private class SaveException extends Exception {}
 	
 }
