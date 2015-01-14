@@ -21,7 +21,9 @@ public with sharing class LineItemTriggerHandler {
 		// execute business logic & persist
 		updatePurchasedAmount(orders, lineItems);
 		updateCategories(orders, lineItems);
+
 		update orders;
+		
 	}
 	
 	/* Utility methods (not exposed)

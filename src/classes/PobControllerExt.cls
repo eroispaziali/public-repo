@@ -173,9 +173,12 @@ public with sharing class PobControllerExt {
 	public PageReference save() {
 		Savepoint sp = Database.setSavepoint();
 		try {
-			
 			// create or update purchase order
 			upsert po;
+			Database.UpsertResult poResult = Database.upsert(po, false);
+			if (!poResult.isSuccess()) {
+			    throw new SaveException('Error while saving the purchase order');
+			}
 			
 			// which line items to be deleted or upserted?
 			List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
@@ -192,38 +195,35 @@ public with sharing class PobControllerExt {
 			// delete & upsert line items
 			List<Database.DeleteResult> dResults = Database.delete(toBeDeleted, false);
 			List<Database.UpsertResult> uResults = Database.upsert(toBeUpserted, false);
-			Boolean hasErrors = false;
 			
 			// Check UPSERT outcome
 			for (Integer i=0; i<uResults.size(); i++) {
 			    if (!uResults[i].isSuccess()) {
-			    	hasErrors = true;
 			        for (Database.Error e : uResults[i].getErrors()) {
-			        	toBeUpserted[i].Units__c.addError(e.getMessage());
-			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
+			        	String friendlyMessage = 
+			        		(e.getStatusCode() == StatusCode.FIELD_CUSTOM_VALIDATION_EXCEPTION) 
+			        		? e.getMessage() : Label.POB_Friendly_Error_LineItem;
+						toBeUpserted[i].Units__c.addError(friendlyMessage);			        	
+			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, friendlyMessage));
 			        }
+			        throw new SaveException('Error while saving line items');
 			    }
 			}
 			
 			// Check DELETE outcome
 			for (Integer i=0; i<dResults.size(); i++) {
 			    if (!dResults[i].isSuccess()) {
-			    	hasErrors = true;
-			        for (Database.Error e : dResults[i].getErrors()) {
-			        	toBeDeleted[i].Units__c.addError(e.getMessage());
-			        	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
-			        }
+			        throw new SaveException('Error while deleting line items');
 			    }
 			}		
-				
-			if (hasErrors) {
-				// Rollback & return to page
-				Database.rollback(sp);
-				return null;
-			} else {
-				// All good, go to record view page
-				return new ApexPages.StandardController(po).view();  
-			}
+			// All good, go to record view page
+			return new ApexPages.StandardController(po).view();
+			  
+		} catch (SaveException e) {
+			Database.rollback(sp);
+			System.debug('*** SAVE EXCEPTION! ' + e.getMessage());
+			System.debug('*** CAUSE ' + e.getCause());
+			return null;
 		} catch (Exception e) {
 			// Generic, unexpected exception: rollback and add friendly message
 			// then stay on the same page
@@ -301,5 +301,7 @@ public with sharing class PobControllerExt {
 			this.product = lot;
 		}
 	}
+	
+	private class SaveException extends Exception {}
 	
 }
