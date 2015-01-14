@@ -108,7 +108,7 @@
 							<apex:outputPanel rendered="{!unitsAreEditable==true}">
 								<apex:actionRegion >
 									<apex:inputField value="{!item.lineItem.Units__c}" required="true">
-										<apex:actionSupport event="onblur" action="{!updateSelection}" status="loadingStatus" reRender="summary, table"/>
+										<apex:actionSupport event="onchange" action="{!updateSelection}" status="loadingStatus" reRender="summary, table"/>
 									</apex:inputField>
 								</apex:actionRegion>
 							</apex:outputPanel>
