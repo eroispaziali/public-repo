@@ -360,9 +360,9 @@ private class PobControllerExtTest {
     		ce.po.Name = 'Updated order name';
     		for (Lot__c l : lots) {
     			if (existingLotIds.contains(l.id)) {
-    				ce.setLotQuantity(l.id, 20);
+    				ce.getWrapper(l).units = 20;
     			} else {
-    				ce.setLotQuantity(l.id, 1);
+    				ce.getWrapper(l).units = 1;
     			}
     		}
     		
@@ -401,20 +401,20 @@ private class PobControllerExtTest {
     }
 
 	/** 
-		TEST PRODUCT SELECTION
+		TEST UNIT LASTS WHEN MOVING ACROSS PAGES
     	======================================================================
-    	Ensure that selection asyncronous action, works correctly in the
-    	controller. 
+    	Ensure that selection works correctly in the controller,
+    	also when using pagination.
     	====================================================================== */
     
-    static testMethod void testUpdateSelection() {
+    static testMethod void testUnitsLastWhenMovingAcrossPages() {
     	
     	User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
 		User inventoryManager = TestDataFactory.createUser('Inventory Managers','iManager');
 		List<Lot__c> lots;
     	
     	System.runAs(inventoryManager) {
-    		lots = TestDataFactory.createLots(5);
+    		lots = TestDataFactory.createLots(10);
     		insert lots;
     	}
     	
@@ -434,19 +434,18 @@ private class PobControllerExtTest {
 	    	Test.setCurrentPage(Page.pob);
 	    	Test.startTest();
 	    	
-	    		Integer j=1;
-	    		for (Lot__c l : lots) {
-	    			ce.quantity = String.valueOf(j);
-	    			ce.lotId = l.Id;
-	    			ce.updateSelection();
-	    			j++;
-	    		}
-	    		
-	    		j = 1;
-	    		for (PobControllerExt.Wrapper w : ce.wrappers) {
-	    			System.assertEquals(j, w.units, 'Number of units inconsistent with selection');
-	    			j++;
-	    		}
+	    	// Select on the first page...
+	    	ce.wrappers[0].units = 10;
+	    	ce.wrappers[2].units = 15;
+	    	
+	    	// ...Move on the next page...
+	    	ce.nextPage();
+	    	System.assertEquals(0, ce.wrappers[0].units, 'Units should be reloaded when moving pages');
+	
+			// ... Move back to the previous one and expect units to be still there  	
+	    	ce.prevPage();
+	    	System.assertEquals(10, ce.wrappers[0].units, 'Units should not be lost when moving across pages');
+	    	System.assertEquals(15, ce.wrappers[2].units, 'Units should not be lost when moving across pages');
 	    	
 	    	Test.stopTest();
     	}
@@ -500,11 +499,11 @@ private class PobControllerExtTest {
 	        for (PobControllerExt.Wrapper w : ce.wrappersMap.values()) {
 	        	System.assertEquals(0, w.units, 'Units should be 0 on an empty order');
 	        }
-	        
+	       
 	        // 2) Add a couple of products
 	        // check summary and selection
-	        ce.setLotQuantity(ce.wrappers[0].product.Id, 2);
-	        ce.setLotQuantity(ce.wrappers[1].product.Id, 3);
+	        ce.getWrapper(ce.wrappers[0].product).units = 2;
+	        ce.getWrapper(ce.wrappers[1].product).units = 3;
 	        ce.updateSelection();
 	        System.assertEquals(2, ce.wrappers[0].units, 'Selection error - Inconsistent number of units');
 	        System.assertEquals(3, ce.wrappers[1].units, 'Selection error - Inconsistent number of units');
@@ -596,8 +595,8 @@ private class PobControllerExtTest {
 	    	
 	    		// Set quantities & hit save
 	    		// These quantities will make the order go over budget (100001k)
-				ce.setLotQuantity(someApples.Id, 100);
-	    		ce.setLotQuantity(somePears.Id, 1);
+	    		ce.getWrapper(someApples).units = 300;
+	    		ce.getWrapper(somePears).units = 1;
 	    		ce.updateSelection();
 		        PageReference nextPage = ce.save();
 		        
@@ -661,8 +660,8 @@ private class PobControllerExtTest {
 	    	Test.startTest();
 	    	
 	    		// Set quantities & hit save
-				ce.setLotQuantity(someApples.Id, 10);
-	    		ce.setLotQuantity(somePears.Id, 1);
+	    		ce.getWrapper(someApples).units = 10;
+	    		ce.getWrapper(somePears).units = 1;
 	    		ce.updateSelection();
 		        PageReference nextPage = ce.save();
 		        

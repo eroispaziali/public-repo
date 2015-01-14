@@ -42,9 +42,11 @@ public with sharing class PobControllerExt {
 		
 		Map<Id, Line_Item__c> lot2Item = new Map<Id, Line_Item__c>();
 		Set<Id> lotIds = new Set<Id>();
-		for (Line_Item__c l : lineItems) {
-			lotIds.add(l.Lot__c);
-			lot2Item.put(l.Lot__c, l);
+		if (lineItems!=null) {
+			for (Line_Item__c l : lineItems) {
+				lotIds.add(l.Lot__c);
+				lot2Item.put(l.Lot__c, l);
+			}
 		}
 		
 		List<Lot__c> lots = [SELECT Id, Name, Product__c, Product_Category__c, Unit_Price__c, Remaining__c FROM Lot__c WHERE Id in :lotIds];
@@ -112,11 +114,7 @@ public with sharing class PobControllerExt {
 	}
 	
 	public void updateSelection() {
-		if (lotId!=null && quantity!=null) {
-			setLotQuantity(lotId, Decimal.valueOf(quantity));
-		} else {
-			System.debug('*** Selection NOT updated');			
-		}
+		refreshWrappers();
 	}
 	
 	public Decimal getUnits() {
@@ -161,23 +159,20 @@ public with sharing class PobControllerExt {
 				upsert po;
 				PageReference saveResult = stdCtrl.save();
 				
-				// delete existing line items (if any)
-				List<Line_Item__c> lineItems = [SELECT Id FROM Line_Item__c WHERE Order__c = :po.Id];
-				if (lineItems!=null && lineItems.size()>0) {
-					delete lineItems;
-				}
-				
-				// create & insert new line items
-				lineItems = new List<Line_Item__c>();
+				List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
+				List<Line_Item__c> toBeUpserted = new List<Line_Item__c>();
 				for (Wrapper w : wrappersMap.values()) {
-					if (w.units > 0) {
-						Line_Item__c li = w.toLineItem();
-						li.Order__c = po.Id;
-						lineItems.add(li);
-					}					
-				}
-				insert lineItems;
-				System.debug('*** Save successful ***');
+					if (w.units > 0 ) {
+						w.lineItem.Order__c = po.Id;
+						toBeUpserted.add(w.lineItem);
+					} else if (w.units == 0 && w.lineItem.Id!=null) {
+						toBeDeleted.add(w.lineItem);
+					}
+				} 
+				// delete & upsert
+				delete toBeDeleted;
+				upsert toBeUpserted;
+				
 				return stdCtrl.view();
 			} catch (Exception e) {
 				// In case of error rollback and stay on the same page (display errors)
@@ -212,19 +207,6 @@ public with sharing class PobControllerExt {
 	}
 	
 	@TestVisible
-	private void setLotQuantity(Id lotId, Decimal quantity) {
-		//quantityMap.put(lotId, quantity);
-		refreshWrappers();
-	}
-	
-	private Decimal getLotQuantity(Id lotId) {
-		//Decimal value = quantityMap.get(lotId)!=null ? quantityMap.get(lotId) : 0;
-//		System.debug('*** Quantity for product ' + lotId + ' is: ' + value);
-		//return value;
-		return null;
-	}
-	
-	@TestVisible
 	private Wrapper getWrapper(Lot__c l) {
 		Wrapper w = wrappersMap.get(l.id);
 		if (w==null) {
@@ -254,6 +236,7 @@ public with sharing class PobControllerExt {
 		public Line_Item__c toLineItem() {
 			return lineItem;
 		}
+		
 	}
 	
 }
