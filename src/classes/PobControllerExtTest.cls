@@ -679,7 +679,7 @@ private class PobControllerExtTest {
     }
     
     /** 
-    	TEST FIELD EDITABILITY
+    	TEST FIELD EDITABILITY (New Orders)
     	=========================================================================== 
     	Editability of the Name, Status, Budget fields in the Purchase Order 
     	Builder page depents on the status of the order. 
@@ -726,7 +726,7 @@ private class PobControllerExtTest {
     }
 
 	/** 
-    	TEST FIELD EDITABILITY
+    	TEST FIELD EDITABILITY (Existing orders)
     	=========================================================================== 
     	Editability of the Name, Status, Budget fields in the Purchase Order 
     	Builder page depents on the status of the order. 

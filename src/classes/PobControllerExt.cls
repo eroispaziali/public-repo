@@ -177,7 +177,6 @@ public with sharing class PobControllerExt {
 		Savepoint sp = Database.setSavepoint();
 		try {
 			upsert po;
-			//stdCtrl.save();
 			List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
 			List<Line_Item__c> toBeUpserted = new List<Line_Item__c>();
 			for (Wrapper w : wrappersMap.values()) {
@@ -191,17 +190,15 @@ public with sharing class PobControllerExt {
 			// delete & upsert
 			delete toBeDeleted;
 			upsert toBeUpserted;
-			
 			return stdCtrl.save();
-		} catch (DmlException e) {
+			
+		} catch (Exception e) {
 			
 			// Rollback
 			Database.rollback(sp);
 			
 			// Add user friendly error messages
-			po.addError(e.getMessage());
 			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
-			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, e.getMessage()));
 			
 			// Stay on the same page
 			return null;
