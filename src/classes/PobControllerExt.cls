@@ -25,6 +25,9 @@ public with sharing class PobControllerExt {
 		stdCtrl = stdController;
 		po = (Order__c) stdCtrl.getRecord();
 		if (isEditingExistingOrder()) {
+			
+			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.INFO, 'Editing an existing order'));
+			
 			heading = po.Name;
 			List<Line_Item__c> existingLineItems = [SELECT Units__c, Lot__c, Amount__c FROM Line_Item__c WHERE Order__c = :po.Id];
 			for (Line_Item__c li : existingLineItems) {
@@ -40,6 +43,18 @@ public with sharing class PobControllerExt {
 	
 	/* Public methods
 	========================= */
+	
+	public boolean getNameIsEditable() {
+		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
+	}
+	
+	public boolean getBudgetIsEditable() {
+		return (po.Id==null || po.Status__c == 'Draft') ? true : false;
+	}
+	
+	public boolean getStatusIsEditable() {
+		return (po.Id==null || po.Status__c != 'Closed') ? true : false;
+	}
 	
 	public List<SelectOption> getFilterValues () {
 		List<SelectOption> options = new List<SelectOption>();
@@ -161,11 +176,14 @@ public with sharing class PobControllerExt {
 				}
 				insert lineItems;
 				System.debug('*** Save successful ***');
-				return stdCtrl.view();
+				PageReference nextPage = stdCtrl.view();
+				nextPage.setRedirect(true);
+				return nextPage;
 			} catch (Exception e) {
 				// In case of error rollback and stay on the same page (display errors)
 				Database.rollback(sp);
 				po.addError(e.getMessage());
+				ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR, Label.POB_Friendly_Error_Message));
 				ApexPages.addMessages(e);
 			}
 		}

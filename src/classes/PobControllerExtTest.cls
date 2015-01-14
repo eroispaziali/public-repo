@@ -679,4 +679,99 @@ private class PobControllerExtTest {
     	}
     }
     
+    /** 
+    	TEST FIELD EDITABILITY
+    	=========================================================================== 
+    	Editability of the Name, Status, Budget fields in the Purchase Order 
+    	Builder page depents on the status of the order. 
+    	NOTE: the editability of the Store field does not have to be tested 
+    	as it's a non-reparentable relationship and editability is managed by
+    	the <apex:inputField> tag 
+    	=========================================================================== */
+    static testMethod void testFieldsEditabilityOnNewOrder() {
+    	
+    	User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+    	System.runAs(accountManager) {
+
+			// Setup data (transient order)	
+    		Account myAccount = TestDataFactory.createAccount();
+    		insert myAccount;	
+    		Order__c myOrder = TestDataFactory.createOrder(TEST_ORDER_BUDGET);
+    		myOrder.Store__c = myAccount.Id;
+    		
+    		// Create controllers
+	    	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+	    	PobControllerExt ce = new PobControllerExt(sc);
+	    	
+	    	// Start test
+	    	Test.setCurrentPage(Page.pob);
+	    	Test.startTest();
+	    	
+	    		ce.po.Status__c = 'Draft';
+	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		
+	    		ce.po.Status__c = 'Open';
+	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		
+	    		ce.po.Status__c = 'Closed';
+	    		System.assertEquals(true, ce.getNameIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'All fields should be editable when creating a new order');
+	    		System.assertEquals(true, ce.getStatusIsEditable() ,'All fields should be editable when creating a new order');
+	    		
+	    	Test.stopTest();
+    	}
+    }
+
+	/** 
+    	TEST FIELD EDITABILITY
+    	=========================================================================== 
+    	Editability of the Name, Status, Budget fields in the Purchase Order 
+    	Builder page depents on the status of the order. 
+    	NOTE: the editability of the Store field does not have to be tested 
+    	as it's a non-reparentable relationship and editability is managed by
+    	the <apex:inputField> tag 
+    	=========================================================================== */
+    static testMethod void testFieldsEditabilityOnExistingOrders() {
+    	
+    	User accountManager = TestDataFactory.createUser('Account Managers', 'aManager');
+    	System.runAs(accountManager) {
+
+			// Setup data    		
+    		Account myAccount = TestDataFactory.createAccount();
+    		insert myAccount;	
+    		Order__c myOrder = TestDataFactory.createOrder(TEST_ORDER_BUDGET);
+    		myOrder.Store__c = myAccount.Id;
+    		insert myOrder;
+    		
+    		// Create controllers
+	    	ApexPages.StandardController sc = new ApexPages.standardController(myOrder);
+	    	PobControllerExt ce = new PobControllerExt(sc);
+	    	
+	    	// Start test
+	    	Test.setCurrentPage(Page.pob);
+	    	Test.startTest();
+	    	
+	    		ce.po.Status__c = 'Draft';
+	    		System.assertEquals(true, ce.getNameIsEditable() ,'Order Name should be modifiable for DRAFT orders');
+	    		System.assertEquals(true, ce.getBudgetIsEditable() ,'Budget should be modifiable for DRAFT orders');
+	    		System.assertEquals(true, ce.getStatusIsEditable() ,'Order Status should be modifiable for DRAFT orders');
+	    		
+	    		ce.po.Status__c = 'Open';
+	    		System.assertEquals(true, ce.getNameIsEditable() ,'Order Name should be modifiable for OPEN orders');
+	    		System.assertEquals(false, ce.getBudgetIsEditable() ,'Budget should NOT be modifiable for OPEN orders');
+	    		System.assertEquals(true, ce.getStatusIsEditable() ,'Order Status should be modifiable for OPEN orders');
+	    		
+	    		ce.po.Status__c = 'Closed';
+	    		System.assertEquals(false, ce.getNameIsEditable() ,'Order Name should NOT be modifiable for CLOSED orders');
+	    		System.assertEquals(false, ce.getBudgetIsEditable() ,'Budget should NOT be modifiable for CLOSED orders');
+	    		System.assertEquals(false, ce.getStatusIsEditable() ,'Order Status should NOT be modifiable for CLOSED orders');
+	    		
+	    	Test.stopTest();
+    	}
+    }
+    
 }

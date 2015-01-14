@@ -17,22 +17,38 @@
 			<!-- Details
 			============================= -->
 			<apex:pageBlockSection title="Details" columns="2" id="details">
-				<apex:inputField value="{!Order__c.Name}" required="true" />
-				<apex:inputField value="{!Order__c.Status__c}" required="true" />
+			
+				<!-- Name -->
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="{!$ObjectType.Order__c.fields.Name.Label}"/>
+					<apex:outputPanel >
+						<apex:inputField value="{!Order__c.Name}" rendered="{!nameIsEditable==true}" required="true" />
+						<apex:outputText value="{!Order__c.Name}" rendered="{!nameIsEditable==false}" />
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				<!-- Status -->
+				<apex:pageBlockSectionItem >
+					<apex:outputLabel value="{!$ObjectType.Order__c.fields.Status__c.Label}"/>
+					<apex:outputPanel >
+						<apex:inputField value="{!Order__c.Status__c}" rendered="{!statusIsEditable==true}" required="true" />
+						<apex:outputText value="{!Order__c.Status__c}" rendered="{!statusIsEditable==false}" />
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				
+				
+				<!-- Budget -->
 				<apex:pageBlockSectionItem >
 					<apex:outputLabel value="{!$ObjectType.Order__c.fields.Budget__c.Label}"/>
 					<apex:outputPanel >
-					
-						<!-- New orders and order drafts have modifiable budget -->
-						<apex:inputField value="{!Order__c.Budget__c}" required="true" rendered="{!Order__c.Id==null || Order__c.Status__c=='Draft'}"/>
-						
-						<!-- Open or closed orders have read-only budget -->
-						<apex:outputText value="${0,number,###,###,##0}" rendered="{!Order__c.Status__c=='Open' || Order__c.Status__c=='Closed'}">
+						<apex:inputField value="{!Order__c.Budget__c}" rendered="{!budgetIsEditable==true}" required="true"/>
+						<apex:outputText value="${0,number,###,###,##0}"  rendered="{!budgetIsEditable==false}">
 							<apex:param value="{!Order__c.Budget__c}"/>
 						</apex:outputText>
-						
 					</apex:outputPanel>
 				</apex:pageBlockSectionItem>
+				
+				<!-- Store -->
 				<apex:inputField value="{!Order__c.Store__c}" required="true" />
 			</apex:pageBlockSection>
 			
