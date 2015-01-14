@@ -317,7 +317,7 @@ private class PobControllerExtTest {
 		Order__c myOrder;
 		
 		System.runAs(inventoryManager) {
-    		lots = TestDataFactory.createLots(NUMBER_OF_LOTS);
+    		lots = TestDataFactory.createLots(4);
     		insert lots;
     	}
     	
@@ -329,12 +329,12 @@ private class PobControllerExtTest {
     		myOrder.Store__c = myAccount.Id;
     		insert myOrder;
     		
-    		List<Line_Item__c> lineItems = new List<Line_Item__c>();
-    		for (Integer i=0; i<2; i++) {
-    			lineItems.add( TestDataFactory.createLineItem(myOrder,lots[i],10) );
-    			existingLotIds.add(lots[i].Id);
-    		}
-    		insert lineItems;
+    		// Prepare 3 line items for this order
+    		Line_Item__c l1 = TestDataFactory.createLineItem(myOrder, lots[0], 1);
+    		Line_Item__c l2 = TestDataFactory.createLineItem(myOrder, lots[1], 5);
+    		Line_Item__c l4 = TestDataFactory.createLineItem(myOrder, lots[3], 1);
+    		insert new List<Line_Item__c>{ l1, l2, l4 };
+    		
     	}
     	
     	// Run tests
@@ -347,24 +347,24 @@ private class PobControllerExtTest {
 	    	Test.startTest();
 	    	
 	    	// (1) Test page load
-    		for (PobControllerExt.Wrapper w : ce.wrappers) {
-    			System.assertEquals(myOrder, ce.po, 'Wrong order loaded');
-    			if (existingLotIds.contains(w.product.id)) {
-    				System.assertEquals(10, w.units, 'Units should be pre-populated for products included in this order');
-    			} else {
-    				System.assertEquals(0, w.units, 'Units should be 0 for products not included as line items in this order');
-    			}
-    		}
+	    	PobControllerExt.Wrapper w1 = ce.getWrapper(lots[0]);
+	    	PobControllerExt.Wrapper w2 = ce.getWrapper(lots[1]);
+	    	PobControllerExt.Wrapper w3 = ce.getWrapper(lots[2]);
+	    	PobControllerExt.Wrapper w4 = ce.getWrapper(lots[3]);
+	    	System.assertEquals(1, w1.units, 'Order was not loaded with the right number of units');
+	    	System.assertNotEquals(null, w1.lineItem.Id, 'Order was not loaded with the line item');
+	    	System.assertEquals(5, w2.units, 'Order was not loaded with the right number of units');
+	    	System.assertNotEquals(null, w2.lineItem.Id, 'Order was not loaded with the line item');
+	    	System.assertEquals(0, w3.units, 'This line item should be empty');
+	    	System.assertEquals(1, w4.units, 'Order was not loaded with the right number of units');
+	    	System.assertNotEquals(null, w4.lineItem.Id, 'Order was not loaded with the line item');
+	    	
     		
     		// (2) edit and save
     		ce.po.Name = 'Updated order name';
-    		for (Lot__c l : lots) {
-    			if (existingLotIds.contains(l.id)) {
-    				ce.getWrapper(l).units = 20;
-    			} else {
-    				ce.getWrapper(l).units = 1;
-    			}
-    		}
+    		w1.units = 2;
+    		w2.units = 0;
+    		w3.units = 5;
     		
     		// Save
 	        PageReference nextPage = ce.save();
@@ -376,26 +376,26 @@ private class PobControllerExtTest {
 	        System.assertEquals(1, orders.size(), 'Unexpected - number of orders created after save is inconsistent');
 	        System.assertEquals('Updated order name', orders[0].Name, 'Unexpected order name was expected to be updated');
 	        System.assertEquals(myOrder.Id, orders[0].Id, 'Unexpected - order ID has been changed');
-	        System.assertEquals(5, lineItems.size(), 'Unexpected - inconsistent number of line items');
+	        System.assertEquals(3, lineItems.size(), 'Unexpected - inconsistent number of line items');
 	        
-	        // Ensure line items are correct
-	        // a) refer to the right Order__c and Lot__c
-	        // b) contain the right units
-	        Boolean newLineItemsFound = false;
-	        Boolean existingLineItemsFound = false; 
+	        // Prepare results in a map by lot index
+	        Map<Integer, Line_Item__c> resultMap = new Map<Integer, Line_Item__c>();
 	        for (Line_Item__c li : lineItems) {
 	        	System.assertEquals(myOrder.Id, li.Order__c, 'Unexpected - line item do not match order');
-	        	if (existingLotIds.contains(li.Lot__c)) {
-	        		System.assertEquals(20,li.Units__c);
-	        		existingLineItemsFound = true;
-	        	} else {
-	        		System.assertEquals(1,li.Units__c);
-	        		newLineItemsFound = true;
+	        	for (Integer i=0; i< lots.size(); i++) {
+	        		if (li.Lot__c == lots[i].Id) {
+	        			resultMap.put(i, li);
+	        		}
 	        	}
 	        }
-	        System.assertEquals(true, existingLineItemsFound, 'Existing line items should have been to be modified');
-	        System.assertEquals(true, newLineItemsFound, 'New line items should have been added');
-    		
+
+			// Check new & updated values: units and record Ids 
+	        System.assertEquals(2, resultMap.get(0).Units__c, 'Units should have been updated 1->2');
+	        System.assertEquals(w1.lineItem.id, resultMap.get(0).Id, 'Record should have been updated not recreated');
+	        System.assertEquals(5, resultMap.get(2).Units__c, 'Units should have been 5 (new record)');
+	        System.assertEquals(1, resultMap.get(3).Units__c, 'Units should have been 1 (no change)');
+	        System.assertEquals(w4.lineItem.id, resultMap.get(3).Id, 'Record should have been updated not recreated');
+
 	    	Test.stopTest();
     	}
     }

@@ -162,7 +162,7 @@ public with sharing class PobControllerExt {
 				List<Line_Item__c> toBeDeleted = new List<Line_Item__c>();
 				List<Line_Item__c> toBeUpserted = new List<Line_Item__c>();
 				for (Wrapper w : wrappersMap.values()) {
-					if (w.units > 0 ) {
+					if (w.units > 0) {
 						w.lineItem.Order__c = po.Id;
 						toBeUpserted.add(w.lineItem);
 					} else if (w.units == 0 && w.lineItem.Id!=null) {
@@ -231,10 +231,6 @@ public with sharing class PobControllerExt {
 		public Wrapper(Lot__c lot, Line_Item__c lineItem) {
 			this.lineItem = (lineItem!=null) ? lineItem : new Line_Item__c(Lot__c = lot.Id, Units__c = 0);
 			this.product = lot;
-		}
-		
-		public Line_Item__c toLineItem() {
-			return lineItem;
 		}
 		
 	}
